@@ -8,7 +8,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAsOhufiOyKl9RbIFTFNgFvBClXIgaPGKA",
@@ -22,13 +22,19 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    window._firebaseDB         = db;
-    window._firebaseCollection = collection;
-    window._firebaseAddDoc     = addDoc;
-    window._firebaseGetDocs    = getDocs;
-    window._firebaseQuery      = query;
-    window._firebaseWhere      = where;
-    window._firebaseReady      = true;
+    window._db          = db;
+    window._collection  = collection;
+    window._addDoc      = addDoc;
+    window._getDocs     = getDocs;
+    window._getDoc      = getDoc;
+    window._setDoc      = setDoc;
+    window._updateDoc   = updateDoc;
+    window._deleteDoc   = deleteDoc;
+    window._doc         = doc;
+    window._query       = query;
+    window._where       = where;
+    window._orderBy     = orderBy;
+    window._fbReady     = true;
     document.dispatchEvent(new Event('firebaseReady'));
   </script>
 
@@ -44,6 +50,8 @@
       --text: #e8dcc8;
       --glow: rgba(201,147,58,0.35);
       --red: #e55;
+      --council-gold: #ffd700;
+      --council-glow: rgba(255,215,0,0.4);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -60,68 +68,66 @@
         radial-gradient(ellipse 50% 60% at 80% 20%, rgba(201,147,58,0.12) 0%, transparent 70%);
     }
 
-    /* ── DAILY GREETING BANNER ── */
+    /* ── GREETING BANNER ── */
     #greetingBanner {
       display: none; position: relative; z-index: 50;
       background: linear-gradient(135deg, rgba(74,103,65,0.25), rgba(201,147,58,0.15));
-      border-bottom: 1px solid rgba(201,147,58,0.25);
-      overflow: hidden;
+      border-bottom: 1px solid rgba(201,147,58,0.25); overflow: hidden;
     }
     #greetingBanner.visible { display: block; animation: bannerSlide 0.6s cubic-bezier(0.22,1,0.36,1) forwards; }
     @keyframes bannerSlide { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
-
-    .greeting-inner {
-      max-width: 900px; margin: 0 auto; padding: 14px 30px;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-    }
+    .greeting-inner { max-width: 960px; margin: 0 auto; padding: 12px 30px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     .greeting-left { display: flex; align-items: center; gap: 14px; }
     .greeting-snail { font-size: 2rem; animation: greetingBob 3s ease-in-out infinite; filter: drop-shadow(0 0 8px var(--shell-gold)); }
     @keyframes greetingBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
-    .greeting-hello { font-family: 'Cinzel Decorative', serif; font-size: clamp(0.65rem,2vw,0.85rem); color: var(--shell-amber); letter-spacing: 0.15em; text-shadow: 0 0 12px var(--glow); }
-    .greeting-username { font-family: 'Playfair Display', serif; font-size: clamp(1.1rem,3vw,1.5rem); color: var(--cream); font-style: italic; }
+    .greeting-hello { font-family: 'Cinzel Decorative', serif; font-size: clamp(0.6rem,2vw,0.8rem); color: var(--shell-amber); letter-spacing: 0.15em; }
+    .greeting-username { font-family: 'Playfair Display', serif; font-size: clamp(1rem,3vw,1.4rem); color: var(--cream); font-style: italic; }
     .greeting-username em { color: var(--shell-amber); font-style: normal; }
-    .greeting-daily { font-size: 0.85rem; color: var(--moss-bright); font-style: italic; opacity: 0.85; max-width: 420px; line-height: 1.5; }
+    .council-badge { display: inline-block; background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05)); border: 1px solid var(--council-gold); border-radius: 20px; padding: 2px 10px; font-size: 0.7rem; color: var(--council-gold); font-family: 'Cinzel Decorative', serif; letter-spacing: 0.1em; margin-left: 8px; text-shadow: 0 0 8px var(--council-glow); }
+    .greeting-daily { font-size: 0.85rem; color: var(--moss-bright); font-style: italic; opacity: 0.85; max-width: 400px; line-height: 1.5; }
     .greeting-dismiss { background: none; border: none; color: var(--text); opacity: 0.35; font-size: 1.1rem; cursor: pointer; padding: 4px 8px; transition: opacity 0.2s; flex-shrink: 0; }
     .greeting-dismiss:hover { opacity: 0.8; }
 
+    /* ── COUNCIL MESSAGE BANNER ── */
+    #councilMessageBanner {
+      display: none; position: relative; z-index: 49;
+      background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(201,147,58,0.08));
+      border-bottom: 1px solid rgba(255,215,0,0.2);
+    }
+    #councilMessageBanner.visible { display: block; animation: bannerSlide 0.5s ease forwards; }
+    .council-msg-inner { max-width: 960px; margin: 0 auto; padding: 10px 30px; display: flex; align-items: flex-start; gap: 14px; }
+    .council-msg-icon { font-size: 1.4rem; flex-shrink: 0; filter: drop-shadow(0 0 6px var(--council-gold)); }
+    .council-msg-body { flex: 1; }
+    .council-msg-label { font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--council-gold); margin-bottom: 4px; }
+    .council-msg-text { font-size: 0.95rem; color: var(--cream); line-height: 1.6; }
+    .council-msg-date { font-size: 0.75rem; color: var(--text); opacity: 0.4; margin-top: 2px; font-style: italic; }
+    .council-msg-dismiss { background: none; border: none; color: var(--text); opacity: 0.3; font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: opacity 0.2s; padding: 4px; }
+    .council-msg-dismiss:hover { opacity: 0.8; }
+
     /* ── TRAIL ── */
     .trail-container { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
-    .trail-dot {
-      position: absolute; width: 6px; height: 6px; border-radius: 50%;
-      background: var(--shell-amber); opacity: 0;
-      animation: trailFade 2s ease-out forwards; box-shadow: 0 0 6px var(--shell-gold);
-    }
+    .trail-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--shell-amber); opacity: 0; animation: trailFade 2s ease-out forwards; box-shadow: 0 0 6px var(--shell-gold); }
     @keyframes trailFade { 0%{opacity:.6} 100%{opacity:0;transform:scale(0.2)} }
 
     /* ── HEADER ── */
     header { position: relative; z-index: 10; text-align: center; padding: 70px 20px 50px; border-bottom: 1px solid rgba(201,147,58,0.2); }
     .crown-emoji { font-size: 3rem; display: block; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 0 16px var(--shell-gold)); }
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-    .site-title {
-      font-family: 'Cinzel Decorative', serif; font-size: clamp(2.4rem,7vw,5.5rem);
-      color: var(--shell-amber); letter-spacing: 0.05em; line-height: 1.1; margin: 16px 0 8px;
-      text-shadow: 0 0 40px var(--glow), 0 2px 0 #5c3a0a;
-      animation: titleGlow 3s ease-in-out infinite alternate;
-    }
-    @keyframes titleGlow {
-      from { text-shadow: 0 0 30px var(--glow), 0 2px 0 #5c3a0a; }
-      to   { text-shadow: 0 0 70px rgba(201,147,58,0.6), 0 0 120px rgba(232,185,106,0.2), 0 2px 0 #5c3a0a; }
-    }
+    .site-title { font-family: 'Cinzel Decorative', serif; font-size: clamp(2.4rem,7vw,5.5rem); color: var(--shell-amber); letter-spacing: 0.05em; line-height: 1.1; margin: 16px 0 8px; text-shadow: 0 0 40px var(--glow), 0 2px 0 #5c3a0a; animation: titleGlow 3s ease-in-out infinite alternate; }
+    @keyframes titleGlow { from{text-shadow:0 0 30px var(--glow),0 2px 0 #5c3a0a} to{text-shadow:0 0 70px rgba(201,147,58,0.6),0 0 120px rgba(232,185,106,0.2),0 2px 0 #5c3a0a} }
     .site-subtitle { font-family: 'Playfair Display', serif; font-style: italic; font-size: clamp(1rem,2.5vw,1.5rem); color: var(--shell-pale); opacity: 0.85; letter-spacing: 0.15em; }
     .snail-divider { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 24px auto; color: var(--shell-gold); opacity: 0.6; font-size: 1.4rem; }
     .snail-divider::before, .snail-divider::after { content: ''; flex: 1; max-width: 120px; height: 1px; background: linear-gradient(90deg, transparent, var(--shell-gold)); }
     .snail-divider::after { transform: scaleX(-1); }
 
     /* ── NAV ── */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(13,10,6,0.93); backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(201,147,58,0.15);
-      display: flex; justify-content: center; gap: 6px; padding: 10px 20px;
-    }
-    nav a { color: var(--shell-pale); text-decoration: none; font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.15em; padding: 8px 16px; border: 1px solid transparent; border-radius: 3px; transition: all 0.3s ease; cursor: pointer; }
-    nav a:hover { color: var(--shell-amber); border-color: var(--shell-gold); background: rgba(201,147,58,0.08); text-shadow: 0 0 12px var(--glow); }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(13,10,6,0.93); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(201,147,58,0.15); display: flex; justify-content: center; gap: 4px; padding: 8px 20px; flex-wrap: wrap; }
+    nav a { color: var(--shell-pale); text-decoration: none; font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.12em; padding: 7px 14px; border: 1px solid transparent; border-radius: 3px; transition: all 0.3s ease; cursor: pointer; }
+    nav a:hover { color: var(--shell-amber); border-color: var(--shell-gold); background: rgba(201,147,58,0.08); }
     nav a.signed-in-nav { color: var(--moss-bright); border-color: rgba(114,168,103,0.3); background: rgba(74,103,65,0.1); }
+    nav a.council-nav { color: var(--council-gold) !important; border-color: rgba(255,215,0,0.3) !important; background: rgba(255,215,0,0.06) !important; text-shadow: 0 0 8px var(--council-glow); }
+    nav a#councilNavLink { display: none; }
+    nav a#membersNavLink { display: none; }
 
     /* ── PAGES ── */
     main { position: relative; z-index: 5; }
@@ -155,6 +161,28 @@
     .card p { font-size: 0.95rem; opacity: 0.8; margin: 0; }
     .sep { border: none; border-top: 1px solid rgba(201,147,58,0.12); margin: 0 30px; }
 
+    /* ── MEMBERS PAGE ── */
+    #page-members { padding-bottom: 60px; }
+    .members-wrap { max-width: 760px; margin: 0 auto; padding: 60px 30px; }
+    .members-title { font-family: 'Cinzel Decorative', serif; font-size: clamp(1.2rem,3vw,1.8rem); color: var(--shell-amber); margin-bottom: 8px; text-shadow: 0 0 20px var(--glow); }
+    .members-sub { font-style: italic; color: var(--shell-pale); opacity: 0.7; margin-bottom: 40px; }
+
+    /* Messages feed */
+    .messages-feed { display: flex; flex-direction: column; gap: 20px; }
+    .message-card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,215,0,0.15);
+      border-radius: 10px; padding: 24px 28px; position: relative; overflow: hidden;
+      animation: fadeInUp 0.4s ease;
+    }
+    .message-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--council-gold), var(--shell-amber)); }
+    .message-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .message-card-crown { font-size: 1.2rem; filter: drop-shadow(0 0 6px var(--council-gold)); }
+    .message-card-from { font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.15em; color: var(--council-gold); }
+    .message-card-date { font-size: 0.78rem; color: var(--text); opacity: 0.4; margin-left: auto; font-style: italic; }
+    .message-card-text { font-size: 1.05rem; line-height: 1.7; color: var(--cream); }
+    .no-messages { text-align: center; padding: 60px 20px; color: var(--text); opacity: 0.4; font-style: italic; }
+    .no-messages span { font-size: 3rem; display: block; margin-bottom: 12px; }
+
     /* ── FORM SHARED ── */
     .form-section { max-width: 560px; margin: 0 auto; padding: 80px 30px 100px; }
     .form-title { font-family: 'Cinzel Decorative', serif; font-size: clamp(1.3rem,3vw,2rem); color: var(--shell-amber); text-align: center; margin-bottom: 8px; text-shadow: 0 0 30px var(--glow); }
@@ -164,12 +192,13 @@
     .form-group { margin-bottom: 24px; position: relative; }
     label { display: block; font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--shell-gold); margin-bottom: 8px; text-transform: uppercase; }
     label .optional { font-family: 'Crimson Text', serif; font-style: italic; color: var(--text); opacity: 0.5; font-size: 0.85rem; letter-spacing: 0; text-transform: none; margin-left: 6px; }
-    input[type="text"], input[type="email"], input[type="tel"], input[type="password"] {
+    input[type="text"], input[type="email"], input[type="tel"], input[type="password"], textarea {
       width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(201,147,58,0.25); border-radius: 6px;
       padding: 12px 16px; color: var(--cream); font-family: 'Crimson Text', serif; font-size: 1rem; outline: none; transition: all 0.3s ease;
     }
-    input::placeholder { color: rgba(232,220,200,0.3); font-style: italic; }
-    input:focus { border-color: var(--shell-amber); background: rgba(201,147,58,0.06); box-shadow: 0 0 0 3px rgba(201,147,58,0.12); }
+    textarea { resize: vertical; min-height: 100px; }
+    input::placeholder, textarea::placeholder { color: rgba(232,220,200,0.3); font-style: italic; }
+    input:focus, textarea:focus { border-color: var(--shell-amber); background: rgba(201,147,58,0.06); box-shadow: 0 0 0 3px rgba(201,147,58,0.12); }
     input.error { border-color: #c0392b; box-shadow: 0 0 0 3px rgba(192,57,43,0.15); }
     input.success { border-color: var(--moss-bright); }
     .field-error { color: #e74c3c; font-size: 0.82rem; margin-top: 5px; display: none; font-style: italic; }
@@ -185,6 +214,14 @@
     .btn-main:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     .btn-secondary { width: 100%; margin-top: 12px; padding: 12px 32px; background: transparent; border: 1px solid rgba(201,147,58,0.4); border-radius: 6px; color: var(--shell-pale); font-family: 'Cinzel Decorative', serif; font-size: 0.75rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s ease; }
     .btn-secondary:hover { border-color: var(--shell-amber); color: var(--shell-amber); background: rgba(201,147,58,0.06); }
+    .btn-council { background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(201,147,58,0.2)); border: 1px solid var(--council-gold); color: var(--council-gold); padding: 8px 18px; border-radius: 6px; font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s ease; }
+    .btn-council:hover { background: rgba(255,215,0,0.2); box-shadow: 0 0 16px var(--council-glow); transform: translateY(-2px); }
+    .btn-remove { background: rgba(220,50,50,0.1); border: 1px solid rgba(220,50,50,0.3); color: var(--red); padding: 6px 14px; border-radius: 6px; font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.3s ease; }
+    .btn-remove:hover { background: rgba(220,50,50,0.25); }
+    .btn-broadcast { width: 100%; margin-top: 10px; padding: 14px 32px; background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(201,147,58,0.2)); border: 1px solid var(--council-gold); border-radius: 6px; color: var(--council-gold); font-family: 'Cinzel Decorative', serif; font-size: 0.8rem; letter-spacing: 0.12em; cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(255,215,0,0.15); }
+    .btn-broadcast:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(255,215,0,0.3); background: rgba(255,215,0,0.2); }
+    .btn-broadcast span { position: relative; z-index: 1; }
+    .btn-broadcast:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     /* ── TAB SWITCHER ── */
     .tab-switcher { display: flex; margin-bottom: 32px; border: 1px solid rgba(201,147,58,0.2); border-radius: 8px; overflow: hidden; }
@@ -206,10 +243,12 @@
     .profile-name { font-family: 'Cinzel Decorative', serif; color: var(--shell-amber); font-size: 1.2rem; margin-bottom: 6px; text-align: center; }
     .profile-username { color: var(--moss-bright); font-style: italic; margin-bottom: 20px; font-size: 1rem; text-align: center; }
     .profile-detail { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,147,58,0.15); border-radius: 6px; padding: 12px 16px; margin-bottom: 10px; text-align: left; font-size: 0.9rem; }
-    .profile-detail span.label { color: var(--shell-gold); font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.15em; display: block; margin-bottom: 4px; }
+    .profile-detail span.lbl { color: var(--shell-gold); font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.15em; display: block; margin-bottom: 4px; }
+    .council-profile-badge { display: block; text-align: center; margin-bottom: 16px; font-family: 'Cinzel Decorative', serif; color: var(--council-gold); font-size: 0.75rem; letter-spacing: 0.15em; text-shadow: 0 0 12px var(--council-glow); padding: 8px; background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.2); border-radius: 6px; }
 
     /* ── SPINNER ── */
     .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(26,14,4,0.3); border-top-color: #1a0e04; border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle; }
+    .spinner-gold { border-color: rgba(255,215,0,0.2); border-top-color: var(--council-gold); }
     @keyframes spin { to{transform:rotate(360deg)} }
 
     /* ── MODAL ── */
@@ -223,20 +262,49 @@
     .modal-sub { text-align: center; font-style: italic; color: var(--text); opacity: 0.6; margin-bottom: 28px; font-size: 0.9rem; }
 
     /* ── ADMIN PANEL ── */
-    .admin-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 2000; overflow-y: auto; padding: 40px 20px; }
+    .admin-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 2000; overflow-y: auto; padding: 30px 20px 60px; }
     .admin-panel.visible { display: block; animation: fadeIn 0.3s ease; }
-    .admin-header { max-width: 940px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .admin-title { font-family: 'Cinzel Decorative', serif; color: var(--red); font-size: 1.2rem; text-shadow: 0 0 20px rgba(220,50,50,0.4); }
+    .admin-header { max-width: 980px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .admin-title { font-family: 'Cinzel Decorative', serif; color: var(--red); font-size: 1.1rem; text-shadow: 0 0 20px rgba(220,50,50,0.4); }
     .admin-close-btn { background: rgba(220,50,50,0.15); border: 1px solid rgba(220,50,50,0.3); color: var(--red); padding: 8px 20px; border-radius: 6px; font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s; }
     .admin-close-btn:hover { background: rgba(220,50,50,0.3); }
-    .admin-count { font-family: 'Cinzel Decorative', serif; color: var(--moss-bright); font-size: 0.7rem; letter-spacing: 0.1em; max-width: 940px; margin: 0 auto 20px; }
-    .admin-table-wrap { max-width: 940px; margin: 0 auto; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th { font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.15em; color: var(--shell-gold); padding: 12px 16px; border-bottom: 1px solid rgba(201,147,58,0.2); text-align: left; }
-    td { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--cream); vertical-align: top; }
+
+    /* Admin tabs */
+    .admin-tabs { max-width: 980px; margin: 0 auto 24px; display: flex; gap: 0; border: 1px solid rgba(220,50,50,0.2); border-radius: 8px; overflow: hidden; }
+    .admin-tab { flex: 1; padding: 12px; background: transparent; border: none; color: var(--shell-pale); font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s; }
+    .admin-tab.active { background: rgba(220,50,50,0.15); color: var(--red); }
+    .admin-tab:hover:not(.active) { background: rgba(220,50,50,0.06); }
+
+    /* Admin section */
+    .admin-section { display: none; max-width: 980px; margin: 0 auto; }
+    .admin-section.active { display: block; }
+    .admin-count { font-family: 'Cinzel Decorative', serif; color: var(--moss-bright); font-size: 0.7rem; letter-spacing: 0.1em; margin-bottom: 16px; }
+    .admin-note { margin-bottom: 16px; padding: 10px 16px; background: rgba(74,103,65,0.1); border: 1px solid rgba(114,168,103,0.2); border-radius: 6px; font-size: 0.82rem; color: var(--moss-bright); font-style: italic; }
+    .admin-table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { font-family: 'Cinzel Decorative', serif; font-size: 0.58rem; letter-spacing: 0.15em; color: var(--shell-gold); padding: 10px 14px; border-bottom: 1px solid rgba(201,147,58,0.2); text-align: left; }
+    td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--cream); vertical-align: middle; }
     tr:hover td { background: rgba(201,147,58,0.04); }
     .admin-empty { text-align: center; color: var(--text); opacity: 0.4; font-style: italic; padding: 40px; }
-    .admin-note { max-width: 940px; margin: 0 auto 16px; padding: 12px 16px; background: rgba(74,103,65,0.1); border: 1px solid rgba(114,168,103,0.2); border-radius: 6px; font-size: 0.85rem; color: var(--moss-bright); font-style: italic; }
+    .council-star { color: var(--council-gold); font-size: 1rem; margin-right: 4px; filter: drop-shadow(0 0 4px var(--council-gold)); }
+
+    /* Broadcast section */
+    .broadcast-box { background: rgba(255,215,0,0.03); border: 1px solid rgba(255,215,0,0.15); border-radius: 12px; padding: 28px 32px; margin-bottom: 30px; position: relative; overflow: hidden; }
+    .broadcast-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--council-gold), var(--shell-amber)); }
+    .broadcast-label { font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.2em; color: var(--council-gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .broadcast-textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,215,0,0.2); border-radius: 6px; padding: 14px 16px; color: var(--cream); font-family: 'Crimson Text', serif; font-size: 1rem; outline: none; resize: vertical; min-height: 100px; transition: all 0.3s; }
+    .broadcast-textarea:focus { border-color: var(--council-gold); box-shadow: 0 0 0 3px rgba(255,215,0,0.1); }
+    .broadcast-preview { margin-top: 20px; padding: 20px 24px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,215,0,0.1); border-radius: 8px; }
+    .broadcast-preview-label { font-family: 'Cinzel Decorative', serif; font-size: 0.55rem; letter-spacing: 0.2em; color: var(--text); opacity: 0.4; margin-bottom: 8px; }
+    .broadcast-preview-text { font-size: 0.95rem; color: var(--cream); line-height: 1.6; font-style: italic; opacity: 0.7; }
+
+    /* Past messages in admin */
+    .past-msg { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,215,0,0.1); border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 12px; }
+    .past-msg-body { flex: 1; }
+    .past-msg-text { color: var(--cream); font-size: 0.9rem; line-height: 1.5; margin-bottom: 4px; }
+    .past-msg-meta { font-size: 0.75rem; color: var(--text); opacity: 0.4; font-style: italic; }
+    .past-msg-del { background: none; border: none; color: var(--red); opacity: 0.4; cursor: pointer; font-size: 1rem; flex-shrink: 0; transition: opacity 0.2s; padding: 4px; }
+    .past-msg-del:hover { opacity: 1; }
 
     /* ── MISC ── */
     .ambient-snail { position: fixed; font-size: 1.8rem; opacity: 0; pointer-events: none; z-index: 2; animation: floatAcross linear forwards; }
@@ -248,11 +316,11 @@
     @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 
     @media(max-width:600px) {
-      nav { flex-wrap: wrap; gap: 4px; }
-      nav a { font-size: 0.6rem; padding: 6px 10px; }
+      nav { gap: 3px; padding: 6px 10px; }
+      nav a { font-size: 0.55rem; padding: 6px 8px; }
       .form-box { padding: 28px 20px; }
       .modal-box { padding: 36px 24px; }
-      .greeting-inner { padding: 12px 16px; }
+      .broadcast-box { padding: 20px 18px; }
     }
   </style>
 </head>
@@ -271,7 +339,20 @@
       </div>
     </div>
     <div class="greeting-daily" id="greetingDaily"></div>
-    <button class="greeting-dismiss" onclick="dismissGreeting()" title="Dismiss">✕</button>
+    <button class="greeting-dismiss" onclick="dismissBanner('greetingBanner')" title="Dismiss">✕</button>
+  </div>
+</div>
+
+<!-- ── COUNCIL MESSAGE BANNER ── -->
+<div id="councilMessageBanner">
+  <div class="council-msg-inner">
+    <span class="council-msg-icon">📜</span>
+    <div class="council-msg-body">
+      <div class="council-msg-label">⭐ MESSAGE FROM THE HIGH COUNCIL</div>
+      <div class="council-msg-text" id="councilMsgText"></div>
+      <div class="council-msg-date" id="councilMsgDate"></div>
+    </div>
+    <button class="council-msg-dismiss" onclick="dismissBanner('councilMessageBanner')" title="Dismiss">✕</button>
   </div>
 </div>
 
@@ -281,7 +362,7 @@
     <button class="modal-close" onclick="closeAdminModal()">✕</button>
     <div style="text-align:center;font-size:2.5rem;margin-bottom:16px">🔐</div>
     <p class="modal-title">Grand Council Access</p>
-    <p class="modal-sub">Enter the sacred password to view the member registry</p>
+    <p class="modal-sub">Enter the sacred password to access the Council Panel</p>
     <div class="form-group">
       <label>Secret Password</label>
       <input type="password" id="adminPasswordInput" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkAdminPassword()"/>
@@ -294,19 +375,66 @@
 <!-- ── ADMIN PANEL ── -->
 <div class="admin-panel" id="adminPanel">
   <div class="admin-header">
-    <div class="admin-title">🔴 Grand Council — Member Registry</div>
+    <div class="admin-title">🔴 Grand Council Command Centre</div>
     <button class="admin-close-btn" onclick="closeAdmin()">✕ Close</button>
   </div>
-  <div class="admin-note" id="adminNote"></div>
-  <div class="admin-count" id="adminCount"></div>
-  <div class="admin-table-wrap">
-    <table id="adminTable">
-      <thead><tr>
-        <th>#</th><th>Name</th><th>Email</th><th>Username</th><th>Phone</th><th>Joined</th>
-      </tr></thead>
-      <tbody id="adminTableBody"></tbody>
-    </table>
-    <p class="admin-empty" id="adminEmpty" style="display:none">No members yet. The Order awaits its first devotee. 🐌</p>
+
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchAdminTab('members')">📋 All Members</button>
+    <button class="admin-tab" onclick="switchAdminTab('council')">⭐ High Council</button>
+    <button class="admin-tab" onclick="switchAdminTab('broadcast')">📢 Broadcast Message</button>
+  </div>
+
+  <!-- MEMBERS TAB -->
+  <div class="admin-section active" id="adminTab-members">
+    <div class="admin-note" id="adminNote"></div>
+    <div class="admin-count" id="adminCount"></div>
+    <div class="admin-table-wrap">
+      <table id="adminTable">
+        <thead><tr>
+          <th>#</th><th>Name</th><th>Email</th><th>Username</th><th>Phone</th><th>Joined</th><th>Rank</th><th>Action</th>
+        </tr></thead>
+        <tbody id="adminTableBody"></tbody>
+      </table>
+      <p class="admin-empty" id="adminEmpty" style="display:none">No members yet. The Order awaits its first devotee. 🐌</p>
+    </div>
+  </div>
+
+  <!-- COUNCIL TAB -->
+  <div class="admin-section" id="adminTab-council">
+    <div style="margin-bottom:20px;padding:16px 20px;background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.15);border-radius:8px;font-size:0.9rem;color:var(--shell-pale);opacity:0.8;font-style:italic">
+      ⭐ &nbsp;High Council members have their own Council tab in the nav bar where they can see all accounts and post messages to members.
+    </div>
+    <div class="admin-count" id="councilCount"></div>
+    <div class="admin-table-wrap">
+      <table id="councilTable">
+        <thead><tr>
+          <th>#</th><th>Name</th><th>Username</th><th>Email</th><th>Joined Council</th><th>Action</th>
+        </tr></thead>
+        <tbody id="councilTableBody"></tbody>
+      </table>
+      <p class="admin-empty" id="councilEmpty" style="display:none">No High Council members yet. Promote someone from the Members tab!</p>
+    </div>
+  </div>
+
+  <!-- BROADCAST TAB -->
+  <div class="admin-section" id="adminTab-broadcast">
+    <div class="broadcast-box">
+      <div class="broadcast-label">📢 &nbsp;Send a Message to All Members</div>
+      <textarea class="broadcast-textarea" id="broadcastInput" placeholder="Write your message to the Order here... (e.g. 'The Grand Council announces a new snail festival on Saturday!')" oninput="updateBroadcastPreview()"></textarea>
+      <div class="broadcast-preview">
+        <div class="broadcast-preview-label">PREVIEW — HOW MEMBERS WILL SEE IT</div>
+        <div class="broadcast-preview-text" id="broadcastPreview">Your message will appear here...</div>
+      </div>
+      <button class="btn-broadcast" id="broadcastBtn" onclick="sendBroadcast()" style="margin-top:20px">
+        <span id="broadcastBtnText">📢 &nbsp;Send to All Members</span>
+      </button>
+    </div>
+
+    <div style="margin-top:10px">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--council-gold);margin-bottom:16px">PAST MESSAGES</div>
+      <div id="pastMessagesList"></div>
+    </div>
   </div>
 </div>
 
@@ -323,6 +451,8 @@
   <a onclick="showPage('home')">Home</a>
   <a onclick="showPage('about')">About</a>
   <a onclick="showPage('manifesto')">Our Creed</a>
+  <a onclick="showPage('members')" id="membersNavLink">📜 Members</a>
+  <a onclick="showPage('council')" id="councilNavLink">⭐ High Council</a>
   <a onclick="showPage('auth')" id="authNavLink">Join / Sign In</a>
 </nav>
 
@@ -333,10 +463,7 @@
     <div class="hero">
       <span class="big-snail" id="bigSnail" onclick="snailClick()">🐌</span>
       <span class="snail-click-hint" id="snailHint"></span>
-      <p class="hero-text">
-        "Slow is not failure. Slow is <em style="color:var(--shell-amber)">sacred</em>.
-        The snail carries its home upon its back and yields to no one."
-      </p>
+      <p class="hero-text">"Slow is not failure. Slow is <em style="color:var(--shell-amber)">sacred</em>. The snail carries its home upon its back and yields to no one."</p>
       <span class="wip-badge">🔧 &nbsp;We are building something magnificent — slowly, as it should be&nbsp; 🔧</span>
     </div>
   </div>
@@ -365,92 +492,103 @@
     </section>
   </div>
 
+  <!-- MEMBERS PAGE (visible to all signed-in members) -->
+  <div class="page" id="page-members">
+    <div class="members-wrap">
+      <p class="members-title">📜 Messages from the Order</p>
+      <p class="members-sub">Proclamations and announcements from the High Council</p>
+      <div class="messages-feed" id="messagesFeed">
+        <div class="no-messages"><span>📜</span>No messages yet from the High Council.<br/>Check back soon, devoted member.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIGH COUNCIL PAGE (only for council members) -->
+  <div class="page" id="page-council">
+    <div style="max-width:900px;margin:0 auto;padding:60px 30px">
+      <p style="font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,3vw,1.6rem);color:var(--council-gold);text-shadow:0 0 20px var(--council-glow);margin-bottom:8px">⭐ High Council Chamber</p>
+      <p style="font-style:italic;color:var(--shell-pale);opacity:0.7;margin-bottom:40px">Restricted to members of the High Council</p>
+
+      <!-- Council broadcast -->
+      <div class="broadcast-box" style="margin-bottom:30px">
+        <div class="broadcast-label">📢 &nbsp;Post a Message to All Members</div>
+        <textarea class="broadcast-textarea" id="councilBroadcastInput" placeholder="Write your message to all members..." oninput="updateCouncilPreview()"></textarea>
+        <div class="broadcast-preview">
+          <div class="broadcast-preview-label">PREVIEW</div>
+          <div class="broadcast-preview-text" id="councilBroadcastPreview">Your message will appear here...</div>
+        </div>
+        <button class="btn-broadcast" id="councilBroadcastBtn" onclick="sendCouncilBroadcast()">
+          <span id="councilBroadcastBtnText">📢 &nbsp;Send to All Members</span>
+        </button>
+      </div>
+
+      <!-- All accounts table for council -->
+      <div style="font-family:'Cinzel Decorative',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--council-gold);margin-bottom:16px">ALL MEMBER ACCOUNTS</div>
+      <div style="overflow-x:auto">
+        <table id="councilMembersTable">
+          <thead><tr>
+            <th>#</th><th>Name</th><th>Email</th><th>Username</th><th>Phone</th><th>Joined</th><th>Rank</th>
+          </tr></thead>
+          <tbody id="councilMembersBody"></tbody>
+        </table>
+        <p class="admin-empty" id="councilMembersEmpty" style="display:none">No members found.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- AUTH -->
   <div class="page" id="page-auth">
     <div class="form-section">
-
-      <!-- PROFILE VIEW -->
       <div id="profileView" style="display:none">
         <p class="form-title">Your Profile</p>
         <p class="form-sub">Inducted member of the Order</p>
         <div class="form-box" style="animation:fadeInUp 0.5s ease">
           <span class="profile-avatar">🐌</span>
+          <div class="council-profile-badge" id="profileCouncilBadge" style="display:none">⭐ HIGH COUNCIL MEMBER ⭐</div>
           <p class="profile-name" id="profileName"></p>
           <p class="profile-username" id="profileUsername"></p>
-          <div class="profile-detail"><span class="label">Email</span><span id="profileEmail"></span></div>
-          <div class="profile-detail" id="profilePhoneRow"><span class="label">Phone</span><span id="profilePhone"></span></div>
-          <div class="profile-detail"><span class="label">Member Since</span><span id="profileDate"></span></div>
-          <button class="btn-secondary" onclick="signOut()" style="margin-top:20px">🚪 &nbsp;Sign Out of the Order</button>
+          <div class="profile-detail"><span class="lbl">Email</span><span id="profileEmail"></span></div>
+          <div class="profile-detail" id="profilePhoneRow"><span class="lbl">Phone</span><span id="profilePhone"></span></div>
+          <div class="profile-detail"><span class="lbl">Member Since</span><span id="profileDate"></span></div>
+          <div class="profile-detail"><span class="lbl">Rank</span><span id="profileRank"></span></div>
+          <button class="btn-secondary" onclick="signOut()" style="margin-top:20px">🚪 &nbsp;Sign Out</button>
         </div>
       </div>
 
-      <!-- AUTH FORMS -->
       <div id="authForms">
         <p class="form-title" id="authTitle">Join the Order</p>
         <p class="form-sub" id="authSub">Create your account to pledge allegiance</p>
-
         <div class="form-box">
           <div class="tab-switcher">
             <button class="tab-btn active" id="tabRegister" onclick="switchTab('register')">Register</button>
             <button class="tab-btn" id="tabSignin" onclick="switchTab('signin')">Sign In</button>
           </div>
-
           <!-- REGISTER -->
           <div id="registerForm">
             <div id="registerContent">
-              <div class="form-group">
-                <label>Your Name <span style="color:#c0392b">*</span></label>
-                <input type="text" id="regName" placeholder="e.g. Percival Shellsworth"/>
-                <span class="field-error" id="regNameErr">Please enter your name.</span>
-              </div>
-              <div class="form-group">
-                <label>Email Address <span style="color:#c0392b">*</span></label>
-                <input type="email" id="regEmail" placeholder="you@snailmail.org"/>
-                <span class="field-error" id="regEmailErr">Please enter a valid email.</span>
-              </div>
-              <div class="form-group">
-                <label>Username <span style="color:#c0392b">*</span></label>
-                <input type="text" id="regUsername" placeholder="e.g. SlimeMaster3000"/>
-                <span class="field-error" id="regUsernameErr">3–20 characters, letters/numbers/_ only.</span>
-              </div>
-              <div class="form-group">
-                <label>Phone Number <span class="optional">(optional)</span></label>
-                <input type="tel" id="regPhone" placeholder="+44 7700 900000"/>
-                <span class="field-error" id="regPhoneErr">Please enter a valid phone number.</span>
-              </div>
-              <button class="btn-main" id="regBtn" onclick="handleRegister()">
-                <span id="regBtnText">🐌 &nbsp;Join the Order</span>
-              </button>
+              <div class="form-group"><label>Your Name <span style="color:#c0392b">*</span></label><input type="text" id="regName" placeholder="e.g. Percival Shellsworth"/><span class="field-error" id="regNameErr">Please enter your name.</span></div>
+              <div class="form-group"><label>Email Address <span style="color:#c0392b">*</span></label><input type="email" id="regEmail" placeholder="you@snailmail.org"/><span class="field-error" id="regEmailErr">Please enter a valid email.</span></div>
+              <div class="form-group"><label>Username <span style="color:#c0392b">*</span></label><input type="text" id="regUsername" placeholder="e.g. SlimeMaster3000"/><span class="field-error" id="regUsernameErr">3–20 characters, letters/numbers/_ only.</span></div>
+              <div class="form-group"><label>Phone Number <span class="optional">(optional)</span></label><input type="tel" id="regPhone" placeholder="+44 7700 900000"/><span class="field-error" id="regPhoneErr">Please enter a valid phone number.</span></div>
+              <button class="btn-main" id="regBtn" onclick="handleRegister()"><span id="regBtnText">🐌 &nbsp;Join the Order</span></button>
             </div>
             <div class="success-panel" id="regSuccess">
               <span class="success-snail">🐌</span>
               <p class="success-title">You Are Inducted!</p>
-              <p class="success-message">Welcome to the Most Exalted Order!<br/>Your account has been saved to Firebase.</p>
-              <div class="success-note">📜 &nbsp;You can now Sign In to receive your daily greeting.</div>
+              <p class="success-message">Welcome to the Most Exalted Order!<br/>Your account is saved to Firebase.</p>
+              <div class="success-note">📜 &nbsp;You can now Sign In to access the Members area.</div>
               <button class="btn-secondary" onclick="switchTab('signin')" style="margin-top:20px">→ Sign In Now</button>
             </div>
           </div>
-
           <!-- SIGN IN -->
           <div id="signinForm" style="display:none">
             <div id="signinContent">
-              <div class="form-group">
-                <label>Email Address <span style="color:#c0392b">*</span></label>
-                <input type="email" id="siEmail" placeholder="The email you registered with"/>
-                <span class="field-error" id="siEmailErr">Please enter your email.</span>
-              </div>
-              <div class="form-group">
-                <label>Username <span style="color:#c0392b">*</span></label>
-                <input type="text" id="siUsername" placeholder="Your username"/>
-                <span class="field-error" id="siUsernameErr">Please enter your username.</span>
-              </div>
+              <div class="form-group"><label>Email Address <span style="color:#c0392b">*</span></label><input type="email" id="siEmail" placeholder="The email you registered with"/><span class="field-error" id="siEmailErr">Please enter your email.</span></div>
+              <div class="form-group"><label>Username <span style="color:#c0392b">*</span></label><input type="text" id="siUsername" placeholder="Your username"/><span class="field-error" id="siUsernameErr">Please enter your username.</span></div>
               <span class="field-error" id="siLoginErr" style="margin-bottom:12px;font-size:0.9rem"></span>
-              <button class="btn-main" id="siBtn" onclick="handleSignIn()">
-                <span id="siBtnText">🐌 &nbsp;Enter the Order</span>
-              </button>
+              <button class="btn-main" id="siBtn" onclick="handleSignIn()"><span id="siBtnText">🐌 &nbsp;Enter the Order</span></button>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -467,410 +605,533 @@
   // ── DAILY MESSAGES ────────────────────────────────────────────────
   const DAILY_MESSAGES = [
     "Today the snail reminds you: one slow step forward is still a step forward. 🐌",
-    "The snail's wisdom for today: your shell protects you — honour it.",
-    "On this day the snail decrees: leave a shimmering trail in everything you do.",
-    "Today's teaching from the Order: patience is not weakness, it is power.",
-    "The snail speaks: rain is not misfortune. Rain is your moment to emerge.",
-    "Today's creed: carry only what matters. Leave the rest behind.",
-    "The ancient snail whispers: slow down, and you will see everything.",
-    "Today the snail honours your return. Loyalty to the Order is rewarded.",
+    "The snail's wisdom: your shell protects you — honour it.",
+    "On this day: leave a shimmering trail in everything you do.",
+    "Patience is not weakness, it is power.",
+    "Rain is not misfortune. Rain is your moment to emerge.",
+    "Carry only what matters. Leave the rest behind.",
+    "Slow down, and you will see everything.",
+    "Loyalty to the Order is always rewarded.",
     "The shell is your home, and home is wherever you carry it.",
-    "Today's wisdom: the fastest creature misses all the beauty along the path.",
+    "The fastest creature misses all the beauty along the path.",
     "The Order rejoices in your presence today. The snail sees you.",
-    "Today the snail asks: what trail will you leave behind today?",
-    "Ancient teaching for today: stillness is not laziness — it is readiness.",
-    "The snail blesses your day. May your path be moist and free of salt.",
-    "Today's decree from the Grand Council: hail thyself before all others.",
-    "The snail notes: every great journey began with one unhurried step.",
-    "On this day, the Order reminds you: your pace is perfect.",
-    "Today the snail observes: the ones who rush past miss the whole garden.",
+    "What trail will you leave behind today?",
+    "Stillness is not laziness — it is readiness.",
+    "May your path be moist and free of salt.",
+    "Hail thyself before all others.",
+    "Every great journey began with one unhurried step.",
+    "Your pace is perfect.",
+    "The ones who rush past miss the whole garden.",
     "The shell holds all memories. Today, make one worth keeping.",
-    "Today's sacred truth: you arrived exactly when you were meant to.",
-    "The snail's daily blessing: may your trail glitter in the morning sun.",
-    "Today the Order celebrates your steadfastness. Keep going, slowly.",
-    "Ancient wisdom for today: a snail that doubts itself never leaves the rock.",
-    "The Grand Council proclaims: today is a good day to be a snail.",
-    "Today the snail whispers: the garden is yours. Take your time in it.",
-    "The Order's message today: rest is not retreat. Rest is preparation.",
-    "Today the snail honours your commitment to the slow and the sacred.",
-    "The daily truth: no shell was built in a day. Be patient with yourself.",
-    "Today the snail sees your effort. Every millimetre counts.",
-    "The Order's final wisdom: slowness is the rarest luxury. Treasure it."
+    "You arrived exactly when you were meant to.",
+    "May your trail glitter in the morning sun.",
+    "The Order celebrates your steadfastness. Keep going, slowly.",
+    "A snail that doubts itself never leaves the rock.",
+    "Today is a good day to be a snail.",
+    "The garden is yours. Take your time in it.",
+    "Rest is not retreat. Rest is preparation.",
+    "Your commitment to the slow and the sacred is honoured.",
+    "No shell was built in a day. Be patient with yourself.",
+    "The snail sees your effort. Every millimetre counts.",
+    "Slowness is the rarest luxury. Treasure it."
   ];
+  function getDailyMessage() { return DAILY_MESSAGES[(new Date().getDate()-1) % DAILY_MESSAGES.length]; }
+  function getTimeGreeting() { const h=new Date().getHours(); return h<12?'Good Morning':h<17?'Good Afternoon':h<21?'Good Evening':'Good Night'; }
 
-  function getDailyMessage() {
-    return DAILY_MESSAGES[(new Date().getDate() - 1) % DAILY_MESSAGES.length];
-  }
-  function getTimeGreeting() {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good Morning';
-    if (h < 17) return 'Good Afternoon';
-    if (h < 21) return 'Good Evening';
-    return 'Good Night';
-  }
-
-  // ── GREETING BANNER ───────────────────────────────────────────────
-  function showGreeting(username) {
-    document.getElementById('greetingHello').textContent = getTimeGreeting() + ',';
-    document.getElementById('greetingUsername').innerHTML = '<em>' + escHtml(username) + '</em> — welcome back to the Order';
-    document.getElementById('greetingDaily').textContent = getDailyMessage();
-    const banner = document.getElementById('greetingBanner');
-    banner.style.cssText = '';
-    banner.classList.add('visible');
-  }
-  function dismissGreeting() {
-    const b = document.getElementById('greetingBanner');
-    b.style.transition = 'all 0.4s ease';
-    b.style.maxHeight = b.offsetHeight + 'px';
-    requestAnimationFrame(() => { b.style.maxHeight = '0'; b.style.opacity = '0'; });
-    setTimeout(() => b.style.display = 'none', 400);
-  }
-
-  // ── LOCAL STORAGE FALLBACK ────────────────────────────────────────
-  function getLocalMembers() { try { return JSON.parse(localStorage.getItem('snail_members')||'[]'); } catch { return []; } }
-  function saveLocalMembers(m) { localStorage.setItem('snail_members', JSON.stringify(m)); }
-  function getCurrentUser()    { try { return JSON.parse(localStorage.getItem('snail_current_user')||'null'); } catch { return null; } }
-  function setCurrentUser(u)   { localStorage.setItem('snail_current_user', JSON.stringify(u)); }
+  // ── LOCAL STORAGE ──────────────────────────────────────────────────
+  function getLocalMembers()  { try{return JSON.parse(localStorage.getItem('snail_members')||'[]')}catch{return[]} }
+  function saveLocalMembers(m){ localStorage.setItem('snail_members',JSON.stringify(m)) }
+  function getCurrentUser()   { try{return JSON.parse(localStorage.getItem('snail_current_user')||'null')}catch{return null} }
+  function setCurrentUser(u)  { localStorage.setItem('snail_current_user',JSON.stringify(u)) }
 
   // ── FIREBASE HELPERS ──────────────────────────────────────────────
-  function fbReady() { return !!window._firebaseReady && !!window._firebaseDB; }
+  const fb = () => window._fbReady && window._db;
 
   async function dbAddMember(member) {
-    if (fbReady()) {
-      try {
-        await window._firebaseAddDoc(window._firebaseCollection(window._firebaseDB, 'members'), member);
-      } catch(e) { console.warn('Firebase write failed:', e); }
-    }
-    const local = getLocalMembers(); local.push(member); saveLocalMembers(local);
+    if(fb()) { try{ await window._addDoc(window._collection(window._db,'members'),member) }catch(e){console.warn(e)} }
+    const l=getLocalMembers(); l.push(member); saveLocalMembers(l);
   }
 
   async function dbFindMember(email, username) {
-    if (fbReady()) {
+    if(fb()) {
       try {
-        const q = window._firebaseQuery(
-          window._firebaseCollection(window._firebaseDB, 'members'),
-          window._firebaseWhere('email', '==', email.toLowerCase()),
-          window._firebaseWhere('username_lower', '==', username.toLowerCase())
-        );
-        const snap = await window._firebaseGetDocs(q);
-        if (!snap.empty) return snap.docs[0].data();
-      } catch(e) { console.warn('Firebase query failed, using local:', e); }
+        const q = window._query(window._collection(window._db,'members'),
+          window._where('email','==',email.toLowerCase()),
+          window._where('username_lower','==',username.toLowerCase()));
+        const snap = await window._getDocs(q);
+        if(!snap.empty) return snap.docs[0].data();
+      } catch(e){console.warn(e)}
     }
-    return getLocalMembers().find(m =>
-      m.email.toLowerCase() === email.toLowerCase() &&
-      m.username.toLowerCase() === username.toLowerCase()
-    ) || null;
+    return getLocalMembers().find(m=>m.email.toLowerCase()===email.toLowerCase()&&m.username.toLowerCase()===username.toLowerCase())||null;
   }
 
   async function dbEmailExists(email) {
-    if (fbReady()) {
+    if(fb()) {
       try {
-        const q = window._firebaseQuery(window._firebaseCollection(window._firebaseDB, 'members'), window._firebaseWhere('email','==',email.toLowerCase()));
-        const snap = await window._firebaseGetDocs(q);
-        if (!snap.empty) return true;
-      } catch(e) {}
+        const snap = await window._getDocs(window._query(window._collection(window._db,'members'),window._where('email','==',email.toLowerCase())));
+        if(!snap.empty) return true;
+      } catch(e){}
     }
-    return getLocalMembers().some(m => m.email.toLowerCase() === email.toLowerCase());
+    return getLocalMembers().some(m=>m.email.toLowerCase()===email.toLowerCase());
   }
 
   async function dbGetAllMembers() {
-    if (fbReady()) {
+    if(fb()) {
       try {
-        const snap = await window._firebaseGetDocs(window._firebaseCollection(window._firebaseDB, 'members'));
-        return snap.docs.map(d => d.data());
-      } catch(e) { console.warn('Firebase read failed:', e); }
+        const snap = await window._getDocs(window._collection(window._db,'members'));
+        return snap.docs.map(d=>({...d.data(), _docId: d.id}));
+      } catch(e){console.warn(e)}
     }
     return getLocalMembers();
   }
 
-  // ── PAGE NAV ──────────────────────────────────────────────────────
-  function showPage(name) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
-    if (name === 'auth') checkAuthState();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  async function dbSetCouncil(memberId, isCouncil) {
+    if(fb()) {
+      try {
+        // Find the doc by member id field
+        const snap = await window._getDocs(window._query(window._collection(window._db,'members'),window._where('id','==',memberId)));
+        if(!snap.empty) {
+          await window._updateDoc(snap.docs[0].ref, { council: isCouncil, councilJoined: isCouncil ? new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '' });
+        }
+      } catch(e){console.warn(e)}
+    }
+    // Update local
+    const l = getLocalMembers();
+    const idx = l.findIndex(m=>m.id===memberId);
+    if(idx>-1) { l[idx].council=isCouncil; saveLocalMembers(l); }
+    // Update session if it's the current user
+    const cur = getCurrentUser();
+    if(cur && cur.id===memberId) { cur.council=isCouncil; setCurrentUser(cur); }
   }
 
+  // ── MESSAGES (Firestore collection: 'messages') ───────────────────
+  async function dbPostMessage(text) {
+    const msg = {
+      text, postedAt: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+      timestamp: Date.now()
+    };
+    if(fb()) {
+      try { const ref = await window._addDoc(window._collection(window._db,'messages'),msg); return ref.id; } catch(e){console.warn(e)}
+    }
+    // Fallback local
+    const msgs = getLocalMessages(); msgs.push({...msg, _localId: Date.now()+''}); saveLocalMessages(msgs);
+  }
+
+  async function dbGetMessages() {
+    if(fb()) {
+      try {
+        const snap = await window._getDocs(window._collection(window._db,'messages'));
+        return snap.docs.map(d=>({...d.data(),_docId:d.id})).sort((a,b)=>b.timestamp-a.timestamp);
+      } catch(e){console.warn(e)}
+    }
+    return getLocalMessages().slice().reverse();
+  }
+
+  async function dbDeleteMessage(docId) {
+    if(fb()) {
+      try { await window._deleteDoc(window._doc(window._db,'messages',docId)); } catch(e){console.warn(e)}
+    }
+  }
+
+  function getLocalMessages()  { try{return JSON.parse(localStorage.getItem('snail_messages')||'[]')}catch{return[]} }
+  function saveLocalMessages(m){ localStorage.setItem('snail_messages',JSON.stringify(m)) }
+
+  // ── PAGE NAV ──────────────────────────────────────────────────────
+  function showPage(name) {
+    const user = getCurrentUser();
+    if((name==='members'||name==='council') && !user) { showPage('auth'); return; }
+    if(name==='council' && (!user||!user.council)) { showPage('home'); return; }
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+name).classList.add('active');
+    if(name==='auth') checkAuthState();
+    if(name==='members') loadMembersPage();
+    if(name==='council') loadCouncilPage();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  // ── BANNERS ───────────────────────────────────────────────────────
+  function showGreeting(user) {
+    document.getElementById('greetingHello').textContent = getTimeGreeting()+',';
+    const councilBit = user.council ? '<span class="council-badge">⭐ HIGH COUNCIL</span>' : '';
+    document.getElementById('greetingUsername').innerHTML = '<em>'+escHtml(user.username)+'</em> — welcome back'+councilBit;
+    document.getElementById('greetingDaily').textContent = getDailyMessage();
+    const b = document.getElementById('greetingBanner');
+    b.style.cssText=''; b.classList.add('visible');
+  }
+
+  async function showCouncilMessage() {
+    const msgs = await dbGetMessages();
+    if(!msgs.length) return;
+    const latest = msgs[0];
+    document.getElementById('councilMsgText').textContent = latest.text;
+    document.getElementById('councilMsgDate').textContent = 'Posted '+latest.postedAt;
+    const b = document.getElementById('councilMessageBanner');
+    b.style.cssText=''; b.classList.add('visible');
+  }
+
+  function dismissBanner(id) {
+    const b = document.getElementById(id);
+    b.style.transition='all 0.4s ease';
+    b.style.maxHeight=b.offsetHeight+'px';
+    requestAnimationFrame(()=>{b.style.maxHeight='0';b.style.opacity='0';});
+    setTimeout(()=>b.style.display='none',400);
+  }
+
+  // ── AUTH STATE ────────────────────────────────────────────────────
   function checkAuthState() {
     const user = getCurrentUser();
-    if (user) {
-      document.getElementById('authForms').style.display = 'none';
-      document.getElementById('profileView').style.display = 'block';
-      document.getElementById('profileName').textContent = user.name;
-      document.getElementById('profileUsername').textContent = '@' + user.username;
-      document.getElementById('profileEmail').textContent = user.email;
-      document.getElementById('profileDate').textContent = user.joined;
-      if (user.phone) {
-        document.getElementById('profilePhone').textContent = user.phone;
-        document.getElementById('profilePhoneRow').style.display = 'block';
-      } else {
-        document.getElementById('profilePhoneRow').style.display = 'none';
-      }
-      const nav = document.getElementById('authNavLink');
-      nav.textContent = '👤 ' + user.username;
-      nav.classList.add('signed-in-nav');
+    const authNav = document.getElementById('authNavLink');
+    const councilNav = document.getElementById('councilNavLink');
+    const membersNav = document.getElementById('membersNavLink');
+
+    if(user) {
+      document.getElementById('authForms').style.display='none';
+      document.getElementById('profileView').style.display='block';
+      document.getElementById('profileName').textContent=user.name;
+      document.getElementById('profileUsername').textContent='@'+user.username;
+      document.getElementById('profileEmail').textContent=user.email;
+      document.getElementById('profileDate').textContent=user.joined;
+      document.getElementById('profileRank').textContent=user.council?'⭐ High Council Member':'Member of the Order';
+      if(user.phone){document.getElementById('profilePhone').textContent=user.phone;document.getElementById('profilePhoneRow').style.display='block';}
+      else document.getElementById('profilePhoneRow').style.display='none';
+      document.getElementById('profileCouncilBadge').style.display=user.council?'block':'none';
+      authNav.textContent='👤 '+user.username;
+      authNav.classList.add('signed-in-nav');
+      membersNav.style.display='inline-block';
+      councilNav.style.display = user.council ? 'inline-block' : 'none';
+      if(user.council) councilNav.classList.add('council-nav');
     } else {
-      document.getElementById('authForms').style.display = 'block';
-      document.getElementById('profileView').style.display = 'none';
-      const nav = document.getElementById('authNavLink');
-      nav.textContent = 'Join / Sign In';
-      nav.classList.remove('signed-in-nav');
+      document.getElementById('authForms').style.display='block';
+      document.getElementById('profileView').style.display='none';
+      authNav.textContent='Join / Sign In';
+      authNav.classList.remove('signed-in-nav');
+      membersNav.style.display='none';
+      councilNav.style.display='none';
     }
   }
 
   function signOut() {
     localStorage.removeItem('snail_current_user');
-    const b = document.getElementById('greetingBanner');
-    b.style.display = 'none'; b.classList.remove('visible');
+    dismissBanner('greetingBanner');
+    dismissBanner('councilMessageBanner');
     checkAuthState();
     showPage('home');
   }
 
   // ── TAB SWITCHER ──────────────────────────────────────────────────
   function switchTab(tab) {
-    document.getElementById('registerForm').style.display = tab==='register' ? 'block' : 'none';
-    document.getElementById('signinForm').style.display   = tab==='signin'   ? 'block' : 'none';
-    document.getElementById('tabRegister').classList.toggle('active', tab==='register');
-    document.getElementById('tabSignin').classList.toggle('active', tab==='signin');
-    document.getElementById('authTitle').textContent = tab==='register' ? 'Join the Order' : 'Return to the Order';
-    document.getElementById('authSub').textContent   = tab==='register' ? 'Create your account to pledge allegiance' : 'Sign in with your registered details';
+    document.getElementById('registerForm').style.display=tab==='register'?'block':'none';
+    document.getElementById('signinForm').style.display=tab==='signin'?'block':'none';
+    document.getElementById('tabRegister').classList.toggle('active',tab==='register');
+    document.getElementById('tabSignin').classList.toggle('active',tab==='signin');
+    document.getElementById('authTitle').textContent=tab==='register'?'Join the Order':'Return to the Order';
+    document.getElementById('authSub').textContent=tab==='register'?'Create your account to pledge allegiance':'Sign in with your registered details';
   }
 
-  // ── VALIDATION HELPERS ────────────────────────────────────────────
-  function showErr(id, errId, msg) {
-    document.getElementById(id).classList.add('error');
-    document.getElementById(id).classList.remove('success');
-    const e = document.getElementById(errId);
-    if (msg) e.textContent = msg;
-    e.classList.add('visible');
-  }
-  function clearErr(id, errId) {
-    document.getElementById(id).classList.remove('error');
-    document.getElementById(id).classList.add('success');
-    document.getElementById(errId).classList.remove('visible');
-  }
+  // ── VALIDATION ────────────────────────────────────────────────────
+  function showErr(id,errId,msg){const e=document.getElementById(id);e.classList.add('error');e.classList.remove('success');const err=document.getElementById(errId);if(msg)err.textContent=msg;err.classList.add('visible');}
+  function clearErr(id,errId){const e=document.getElementById(id);e.classList.remove('error');e.classList.add('success');document.getElementById(errId).classList.remove('visible');}
 
   // ── REGISTER ──────────────────────────────────────────────────────
   async function handleRegister() {
-    let ok = true;
-    const name     = document.getElementById('regName').value.trim();
-    const email    = document.getElementById('regEmail').value.trim();
-    const username = document.getElementById('regUsername').value.trim();
-    const phone    = document.getElementById('regPhone').value.trim();
-
-    if (!name)                                               { showErr('regName','regNameErr'); ok=false; }         else clearErr('regName','regNameErr');
-    if (!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))  { showErr('regEmail','regEmailErr'); ok=false; }       else clearErr('regEmail','regEmailErr');
-    if (!username||!/^[a-zA-Z0-9_]{3,20}$/.test(username))  { showErr('regUsername','regUsernameErr'); ok=false; } else clearErr('regUsername','regUsernameErr');
-    if (phone&&!/^[\+\d\s\-\(\)]{7,20}$/.test(phone))       { showErr('regPhone','regPhoneErr'); ok=false; }       else document.getElementById('regPhone').classList.remove('error');
-    if (!ok) return;
-
-    const btn = document.getElementById('regBtn');
-    btn.disabled = true;
-    document.getElementById('regBtnText').innerHTML = '<span class="spinner"></span>Checking the scrolls…';
-
-    const exists = await dbEmailExists(email);
-    if (exists) {
-      btn.disabled = false;
-      document.getElementById('regBtnText').innerHTML = '🐌 &nbsp;Join the Order';
-      showErr('regEmail','regEmailErr','This email is already registered. Please sign in.');
-      return;
-    }
-    document.getElementById('regEmailErr').textContent = 'Please enter a valid email.';
-    document.getElementById('regBtnText').innerHTML = '<span class="spinner"></span>Initiating the Sacred Rites…';
-
-    const joined = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
-    const member = { name, email: email.toLowerCase(), username, username_lower: username.toLowerCase(), phone: phone||'', joined, id: Date.now() };
-
+    let ok=true;
+    const name=document.getElementById('regName').value.trim();
+    const email=document.getElementById('regEmail').value.trim();
+    const username=document.getElementById('regUsername').value.trim();
+    const phone=document.getElementById('regPhone').value.trim();
+    if(!name){showErr('regName','regNameErr');ok=false;}else clearErr('regName','regNameErr');
+    if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showErr('regEmail','regEmailErr');ok=false;}else clearErr('regEmail','regEmailErr');
+    if(!username||!/^[a-zA-Z0-9_]{3,20}$/.test(username)){showErr('regUsername','regUsernameErr');ok=false;}else clearErr('regUsername','regUsernameErr');
+    if(phone&&!/^[\+\d\s\-\(\)]{7,20}$/.test(phone)){showErr('regPhone','regPhoneErr');ok=false;}else document.getElementById('regPhone').classList.remove('error');
+    if(!ok) return;
+    const btn=document.getElementById('regBtn'); btn.disabled=true;
+    document.getElementById('regBtnText').innerHTML='<span class="spinner"></span>Checking the scrolls…';
+    const exists=await dbEmailExists(email);
+    if(exists){btn.disabled=false;document.getElementById('regBtnText').innerHTML='🐌 &nbsp;Join the Order';showErr('regEmail','regEmailErr','This email is already registered.');return;}
+    document.getElementById('regEmailErr').textContent='Please enter a valid email.';
+    document.getElementById('regBtnText').innerHTML='<span class="spinner"></span>Initiating the Sacred Rites…';
+    const joined=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    const member={name,email:email.toLowerCase(),username,username_lower:username.toLowerCase(),phone:phone||'',joined,id:Date.now(),council:false,councilJoined:''};
     await dbAddMember(member);
-
-    try {
-      await fetch('https://api.web3forms.com/submit', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          access_key: 'fac89c06-5a42-4a33-805e-2c8528ed1ade',
-          subject: '🐌 New Snail Order Member: ' + username,
-          from_name: 'Hail the Snail HQ',
-          message: 'New member!\n\nName: '+name+'\nEmail: '+email+'\nUsername: '+username+'\nPhone: '+(phone||'Not provided')+'\nJoined: '+joined+'\n\nHail the Snail! 🐌'
-        })
-      });
-    } catch(e) {}
-
-    await new Promise(r => setTimeout(r, 800));
-    btn.disabled = false;
-    document.getElementById('regBtnText').innerHTML = '🐌 &nbsp;Join the Order';
-    document.getElementById('registerContent').style.display = 'none';
+    try{await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_key:'fac89c06-5a42-4a33-805e-2c8528ed1ade',subject:'🐌 New Member: '+username,from_name:'Hail the Snail',message:'New member!\n\nName: '+name+'\nEmail: '+email+'\nUsername: '+username+'\nPhone: '+(phone||'Not provided')+'\nJoined: '+joined})});}catch(e){}
+    await new Promise(r=>setTimeout(r,800));
+    btn.disabled=false;
+    document.getElementById('regBtnText').innerHTML='🐌 &nbsp;Join the Order';
+    document.getElementById('registerContent').style.display='none';
     document.getElementById('regSuccess').classList.add('visible');
     launchConfettiSnails();
   }
 
   // ── SIGN IN ───────────────────────────────────────────────────────
   async function handleSignIn() {
-    const email    = document.getElementById('siEmail').value.trim();
-    const username = document.getElementById('siUsername').value.trim();
-    let ok = true;
-
-    if (!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('siEmail','siEmailErr'); ok=false; } else clearErr('siEmail','siEmailErr');
-    if (!username) { showErr('siUsername','siUsernameErr'); ok=false; } else clearErr('siUsername','siUsernameErr');
-    if (!ok) return;
-
-    const btn = document.getElementById('siBtn');
-    btn.disabled = true;
-    document.getElementById('siBtnText').innerHTML = '<span class="spinner"></span>Verifying your allegiance…';
-
-    const member = await dbFindMember(email, username);
-    btn.disabled = false;
-    document.getElementById('siBtnText').innerHTML = '🐌 &nbsp;Enter the Order';
-
-    const errEl = document.getElementById('siLoginErr');
-    if (!member) {
-      errEl.textContent = '❌ No account found. Check your email and username.';
-      errEl.classList.add('visible');
-      return;
-    }
-
+    const email=document.getElementById('siEmail').value.trim();
+    const username=document.getElementById('siUsername').value.trim();
+    let ok=true;
+    if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showErr('siEmail','siEmailErr');ok=false;}else clearErr('siEmail','siEmailErr');
+    if(!username){showErr('siUsername','siUsernameErr');ok=false;}else clearErr('siUsername','siUsernameErr');
+    if(!ok) return;
+    const btn=document.getElementById('siBtn'); btn.disabled=true;
+    document.getElementById('siBtnText').innerHTML='<span class="spinner"></span>Verifying allegiance…';
+    const member=await dbFindMember(email,username);
+    btn.disabled=false;
+    document.getElementById('siBtnText').innerHTML='🐌 &nbsp;Enter the Order';
+    const errEl=document.getElementById('siLoginErr');
+    if(!member){errEl.textContent='❌ No account found. Check your email and username.';errEl.classList.add('visible');return;}
     errEl.classList.remove('visible');
     setCurrentUser(member);
     checkAuthState();
     launchConfettiSnails();
-    showGreeting(member.username);
-    setTimeout(() => showPage('home'), 500);
+    showGreeting(member);
+    // Show latest council message if any
+    setTimeout(async()=>{
+      const msgs=await dbGetMessages();
+      if(msgs.length) showCouncilMessage();
+    },800);
+    setTimeout(()=>showPage('home'),500);
   }
 
-  // ── SECRET ADMIN (click snail 13×) ────────────────────────────────
-  let snailClicks = 0, clickTimer = null;
+  // ── MEMBERS PAGE ──────────────────────────────────────────────────
+  async function loadMembersPage() {
+    const feed = document.getElementById('messagesFeed');
+    feed.innerHTML = '<div class="no-messages"><span>⏳</span>Loading messages...</div>';
+    const msgs = await dbGetMessages();
+    if(!msgs.length){feed.innerHTML='<div class="no-messages"><span>📜</span>No messages yet from the High Council.<br/>Check back soon, devoted member.</div>';return;}
+    feed.innerHTML = msgs.map(m=>`
+      <div class="message-card">
+        <div class="message-card-header">
+          <span class="message-card-crown">⭐</span>
+          <span class="message-card-from">HIGH COUNCIL</span>
+          <span class="message-card-date">${escHtml(m.postedAt||'')}</span>
+        </div>
+        <div class="message-card-text">${escHtml(m.text)}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── COUNCIL PAGE ──────────────────────────────────────────────────
+  async function loadCouncilPage() {
+    const members = await dbGetAllMembers();
+    const tbody = document.getElementById('councilMembersBody');
+    tbody.innerHTML='';
+    document.getElementById('councilMembersEmpty').style.display=members.length?'none':'block';
+    members.forEach((m,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td style="opacity:0.4">${i+1}</td>
+        <td><strong>${escHtml(m.name)}</strong></td>
+        <td>${escHtml(m.email)}</td>
+        <td style="color:var(--moss-bright)">@${escHtml(m.username)}</td>
+        <td>${m.phone?escHtml(m.phone):'<span style="opacity:0.3">—</span>'}</td>
+        <td style="opacity:0.7;font-size:0.85rem">${escHtml(m.joined)}</td>
+        <td>${m.council?'<span class="council-star">⭐</span>Council':'Member'}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ── BROADCAST PREVIEW ─────────────────────────────────────────────
+  function updateBroadcastPreview() {
+    const t=document.getElementById('broadcastInput').value.trim();
+    document.getElementById('broadcastPreview').textContent=t||'Your message will appear here...';
+  }
+  function updateCouncilPreview() {
+    const t=document.getElementById('councilBroadcastInput').value.trim();
+    document.getElementById('councilBroadcastPreview').textContent=t||'Your message will appear here...';
+  }
+
+  // ── SEND BROADCAST ────────────────────────────────────────────────
+  async function sendBroadcast() {
+    const text=document.getElementById('broadcastInput').value.trim();
+    if(!text) return;
+    const btn=document.getElementById('broadcastBtn'); btn.disabled=true;
+    document.getElementById('broadcastBtnText').innerHTML='<span class="spinner spinner-gold"></span>Sending…';
+    await dbPostMessage(text);
+    await new Promise(r=>setTimeout(r,800));
+    document.getElementById('broadcastInput').value='';
+    document.getElementById('broadcastPreview').textContent='Your message will appear here...';
+    btn.disabled=false;
+    document.getElementById('broadcastBtnText').innerHTML='📢 &nbsp;Send to All Members';
+    await loadPastMessages();
+  }
+
+  async function sendCouncilBroadcast() {
+    const text=document.getElementById('councilBroadcastInput').value.trim();
+    if(!text) return;
+    const btn=document.getElementById('councilBroadcastBtn'); btn.disabled=true;
+    document.getElementById('councilBroadcastBtnText').innerHTML='<span class="spinner spinner-gold"></span>Sending…';
+    await dbPostMessage(text);
+    await new Promise(r=>setTimeout(r,800));
+    document.getElementById('councilBroadcastInput').value='';
+    document.getElementById('councilBroadcastPreview').textContent='Your message will appear here...';
+    btn.disabled=false;
+    document.getElementById('councilBroadcastBtnText').innerHTML='📢 &nbsp;Send to All Members';
+    // Show success briefly
+    const note=document.createElement('div');
+    note.style.cssText='padding:10px 16px;background:rgba(74,103,65,0.2);border:1px solid var(--moss-bright);border-radius:6px;color:var(--moss-bright);font-size:0.88rem;margin-top:12px;text-align:center';
+    note.textContent='✅ Message sent to all members!';
+    document.getElementById('councilBroadcastBtn').after(note);
+    setTimeout(()=>note.remove(),3000);
+  }
+
+  async function loadPastMessages() {
+    const msgs=await dbGetMessages();
+    const el=document.getElementById('pastMessagesList');
+    if(!msgs.length){el.innerHTML='<p style="opacity:0.4;font-style:italic;font-size:0.88rem">No messages sent yet.</p>';return;}
+    el.innerHTML=msgs.map(m=>`
+      <div class="past-msg">
+        <div class="past-msg-body">
+          <div class="past-msg-text">${escHtml(m.text)}</div>
+          <div class="past-msg-meta">Sent ${escHtml(m.postedAt||'')}</div>
+        </div>
+        <button class="past-msg-del" onclick="deleteMessage('${escHtml(m._docId||'')}','${escHtml(m._localId||'')}',this)" title="Delete">🗑</button>
+      </div>
+    `).join('');
+  }
+
+  async function deleteMessage(docId, localId, btn) {
+    if(!confirm('Delete this message? Members will no longer see it.')) return;
+    btn.disabled=true; btn.textContent='…';
+    if(docId) await dbDeleteMessage(docId);
+    await loadPastMessages();
+  }
+
+  // ── ADMIN PANEL ───────────────────────────────────────────────────
+  function switchAdminTab(tab) {
+    document.querySelectorAll('.admin-tab').forEach((b,i)=>b.classList.toggle('active',['members','council','broadcast'][i]===tab));
+    document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('adminTab-'+tab).classList.add('active');
+    if(tab==='broadcast') loadPastMessages();
+  }
+
+  // Secret snail click
+  let snailClicks=0,clickTimer=null;
   function snailClick() {
     snailClicks++;
     clearTimeout(clickTimer);
-    clickTimer = setTimeout(() => { snailClicks = 0; document.getElementById('snailHint').classList.remove('visible'); }, 4000);
-    const hint = document.getElementById('snailHint');
-    if (snailClicks >= 3 && snailClicks < 13) { hint.textContent = snailClicks + ' / 13 — keep going...'; hint.classList.add('visible'); }
-    if (snailClicks === 13) {
-      snailClicks = 0; hint.classList.remove('visible'); clearTimeout(clickTimer);
-      const s = document.getElementById('bigSnail');
-      s.style.filter = 'drop-shadow(0 0 40px red)';
-      setTimeout(() => s.style.filter = '', 600);
-      setTimeout(openAdminModal, 400);
+    clickTimer=setTimeout(()=>{snailClicks=0;document.getElementById('snailHint').classList.remove('visible');},4000);
+    const hint=document.getElementById('snailHint');
+    if(snailClicks>=3&&snailClicks<13){hint.textContent=snailClicks+' / 13 — keep going...';hint.classList.add('visible');}
+    if(snailClicks===13){
+      snailClicks=0;hint.classList.remove('visible');clearTimeout(clickTimer);
+      const s=document.getElementById('bigSnail');
+      s.style.filter='drop-shadow(0 0 40px red)';
+      setTimeout(()=>s.style.filter='',600);
+      setTimeout(openAdminModal,400);
     }
   }
 
-  function openAdminModal() {
-    document.getElementById('adminPasswordInput').value = '';
-    document.getElementById('adminPassErr').classList.remove('visible');
-    document.getElementById('adminModal').classList.add('visible');
-    setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
-  }
-  function closeAdminModal() { document.getElementById('adminModal').classList.remove('visible'); }
-  function checkAdminPassword() {
-    if (document.getElementById('adminPasswordInput').value === 'JaiGURUJI777') {
-      closeAdminModal(); openAdminPanel();
-    } else {
-      document.getElementById('adminPassErr').classList.add('visible');
-      document.getElementById('adminPasswordInput').value = '';
-      document.getElementById('adminPasswordInput').focus();
-    }
+  function openAdminModal(){document.getElementById('adminPasswordInput').value='';document.getElementById('adminPassErr').classList.remove('visible');document.getElementById('adminModal').classList.add('visible');setTimeout(()=>document.getElementById('adminPasswordInput').focus(),100);}
+  function closeAdminModal(){document.getElementById('adminModal').classList.remove('visible');}
+  function checkAdminPassword(){
+    if(document.getElementById('adminPasswordInput').value==='JaiGURUJI777'){closeAdminModal();openAdminPanel();}
+    else{document.getElementById('adminPassErr').classList.add('visible');document.getElementById('adminPasswordInput').value='';document.getElementById('adminPasswordInput').focus();}
   }
 
   async function openAdminPanel() {
-    const members = await dbGetAllMembers();
-    const tbody = document.getElementById('adminTableBody');
-    tbody.innerHTML = '';
-
-    document.getElementById('adminNote').textContent = fbReady()
-      ? '✅ Live data from Firebase — synced across all devices worldwide.'
-      : '⚠️ Firebase not active — showing local browser data only.';
-
-    if (members.length === 0) {
-      document.getElementById('adminEmpty').style.display = 'block';
-      document.getElementById('adminTable').style.display = 'none';
-      document.getElementById('adminCount').textContent = '';
-    } else {
-      document.getElementById('adminEmpty').style.display = 'none';
-      document.getElementById('adminTable').style.display = 'table';
-      document.getElementById('adminCount').textContent = '📋  Total Members: ' + members.length;
-      members.forEach((m, i) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+    const members=await dbGetAllMembers();
+    const tbody=document.getElementById('adminTableBody');
+    tbody.innerHTML='';
+    document.getElementById('adminNote').textContent=fb()?'✅ Live Firebase data — synced across all devices.':'⚠️ Local data only — Firebase not active.';
+    if(!members.length){document.getElementById('adminEmpty').style.display='block';document.getElementById('adminTable').style.display='none';document.getElementById('adminCount').textContent='';}
+    else{
+      document.getElementById('adminEmpty').style.display='none';
+      document.getElementById('adminTable').style.display='table';
+      document.getElementById('adminCount').textContent='📋 Total Members: '+members.length;
+      members.forEach((m,i)=>{
+        const isCouncil=!!m.council;
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
           <td style="opacity:0.4">${i+1}</td>
           <td><strong>${escHtml(m.name)}</strong></td>
           <td>${escHtml(m.email)}</td>
           <td style="color:var(--moss-bright)">@${escHtml(m.username)}</td>
-          <td>${m.phone ? escHtml(m.phone) : '<span style="opacity:0.3">—</span>'}</td>
-          <td style="opacity:0.7;font-size:0.85rem">${escHtml(m.joined)}</td>`;
+          <td>${m.phone?escHtml(m.phone):'<span style="opacity:0.3">—</span>'}</td>
+          <td style="opacity:0.7;font-size:0.82rem">${escHtml(m.joined)}</td>
+          <td>${isCouncil?'<span class="council-star">⭐</span>Council':'Member'}</td>
+          <td>
+            ${!isCouncil
+              ? `<button class="btn-council" onclick="promoteToCouncil(${m.id},this)">⭐ Make Council</button>`
+              : `<button class="btn-remove" onclick="removeFromCouncil(${m.id},this)">Remove</button>`
+            }
+          </td>`;
         tbody.appendChild(tr);
       });
     }
+
+    // Council tab
+    const councilMembers=members.filter(m=>m.council);
+    const ctbody=document.getElementById('councilTableBody');
+    ctbody.innerHTML='';
+    document.getElementById('councilCount').textContent='⭐ High Council Members: '+councilMembers.length;
+    if(!councilMembers.length){document.getElementById('councilEmpty').style.display='block';document.getElementById('councilTable').style.display='none';}
+    else{
+      document.getElementById('councilEmpty').style.display='none';
+      document.getElementById('councilTable').style.display='table';
+      councilMembers.forEach((m,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td style="opacity:0.4">${i+1}</td>
+          <td><strong>${escHtml(m.name)}</strong></td>
+          <td style="color:var(--moss-bright)">@${escHtml(m.username)}</td>
+          <td>${escHtml(m.email)}</td>
+          <td style="opacity:0.7;font-size:0.82rem">${escHtml(m.councilJoined||m.joined)}</td>
+          <td><button class="btn-remove" onclick="removeFromCouncil(${m.id},this)">Remove</button></td>`;
+        ctbody.appendChild(tr);
+      });
+    }
+
     document.getElementById('adminPanel').classList.add('visible');
   }
-  function closeAdmin() { document.getElementById('adminPanel').classList.remove('visible'); }
+
+  async function promoteToCouncil(memberId, btn) {
+    btn.disabled=true; btn.textContent='…';
+    await dbSetCouncil(memberId, true);
+    await openAdminPanel();
+  }
+
+  async function removeFromCouncil(memberId, btn) {
+    if(!confirm('Remove this member from the High Council?')) return;
+    btn.disabled=true; btn.textContent='…';
+    await dbSetCouncil(memberId, false);
+    await openAdminPanel();
+  }
+
+  function closeAdmin(){document.getElementById('adminPanel').classList.remove('visible');}
 
   // ── UTILS ─────────────────────────────────────────────────────────
-  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
   // ── MOUSE TRAIL ───────────────────────────────────────────────────
-  const trailContainer = document.getElementById('trailContainer');
-  let lastTrail = 0;
-  document.addEventListener('mousemove', e => {
-    const now = Date.now();
-    if (now - lastTrail < 60) return;
-    lastTrail = now;
-    const dot = document.createElement('div');
-    dot.className = 'trail-dot';
-    dot.style.left = e.clientX - 3 + 'px';
-    dot.style.top  = e.clientY - 3 + 'px';
-    trailContainer.appendChild(dot);
-    setTimeout(() => dot.remove(), 2000);
+  const trailContainer=document.getElementById('trailContainer');
+  let lastTrail=0;
+  document.addEventListener('mousemove',e=>{
+    const now=Date.now();if(now-lastTrail<60)return;lastTrail=now;
+    const dot=document.createElement('div');dot.className='trail-dot';
+    dot.style.left=e.clientX-3+'px';dot.style.top=e.clientY-3+'px';
+    trailContainer.appendChild(dot);setTimeout(()=>dot.remove(),2000);
   });
 
   // ── AMBIENT SNAILS ────────────────────────────────────────────────
-  function launchAmbientSnail() {
-    const s = document.createElement('div');
-    s.className = 'ambient-snail'; s.textContent = '🐌';
-    const dur = 8 + Math.random() * 12;
-    s.style.left = Math.random() * window.innerWidth + 'px';
-    s.style.top  = Math.random() * window.innerHeight + 'px';
-    s.style.setProperty('--tx', (Math.random()-0.5)*300+'px');
-    s.style.setProperty('--ty', (Math.random()-0.5)*200+'px');
-    s.style.animationDuration = dur + 's';
-    document.body.appendChild(s);
-    setTimeout(() => s.remove(), dur*1000);
-  }
-  setInterval(launchAmbientSnail, 4000);
-  launchAmbientSnail();
+  function launchAmbientSnail(){const s=document.createElement('div');s.className='ambient-snail';s.textContent='🐌';const dur=8+Math.random()*12;s.style.left=Math.random()*window.innerWidth+'px';s.style.top=Math.random()*window.innerHeight+'px';s.style.setProperty('--tx',(Math.random()-0.5)*300+'px');s.style.setProperty('--ty',(Math.random()-0.5)*200+'px');s.style.animationDuration=dur+'s';document.body.appendChild(s);setTimeout(()=>s.remove(),dur*1000);}
+  setInterval(launchAmbientSnail,4000);launchAmbientSnail();
 
-  function launchConfettiSnails() {
-    for (let i = 0; i < 10; i++) {
-      setTimeout(() => {
-        const s = document.createElement('div');
-        s.className = 'ambient-snail'; s.textContent = '🐌';
-        s.style.fontSize = '2.5rem';
-        s.style.left = Math.random() * window.innerWidth + 'px';
-        s.style.top  = Math.random() * window.innerHeight + 'px';
-        s.style.setProperty('--tx', (Math.random()-0.5)*400+'px');
-        s.style.setProperty('--ty', (Math.random()-0.5)*400+'px');
-        s.style.animationDuration = '3s';
-        document.body.appendChild(s);
-        setTimeout(() => s.remove(), 3000);
-      }, i * 150);
-    }
-  }
+  function launchConfettiSnails(){for(let i=0;i<10;i++){setTimeout(()=>{const s=document.createElement('div');s.className='ambient-snail';s.textContent='🐌';s.style.fontSize='2.5rem';s.style.left=Math.random()*window.innerWidth+'px';s.style.top=Math.random()*window.innerHeight+'px';s.style.setProperty('--tx',(Math.random()-0.5)*400+'px');s.style.setProperty('--ty',(Math.random()-0.5)*400+'px');s.style.animationDuration='3s';document.body.appendChild(s);setTimeout(()=>s.remove(),3000);},i*150);}}
 
   // ── SCROLL REVEAL ─────────────────────────────────────────────────
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
-  }, { threshold: 0.15 });
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  const observer=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in-view');});},{threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+  // ── MODAL CLOSE ON OVERLAY CLICK ─────────────────────────────────
+  document.getElementById('adminModal').addEventListener('click',function(e){if(e.target===this)closeAdminModal();});
 
   // ── INIT ──────────────────────────────────────────────────────────
-  document.getElementById('adminModal').addEventListener('click', function(e) {
-    if (e.target === this) closeAdminModal();
-  });
-
-  // If already signed in, show greeting immediately
-  const existingUser = getCurrentUser();
-  if (existingUser) {
-    document.getElementById('authNavLink').textContent = '👤 ' + existingUser.username;
+  const existingUser=getCurrentUser();
+  if(existingUser){
+    document.getElementById('authNavLink').textContent='👤 '+existingUser.username;
     document.getElementById('authNavLink').classList.add('signed-in-nav');
-    showGreeting(existingUser.username);
+    document.getElementById('membersNavLink').style.display='inline-block';
+    if(existingUser.council){document.getElementById('councilNavLink').style.display='inline-block';document.getElementById('councilNavLink').classList.add('council-nav');}
+    showGreeting(existingUser);
+    setTimeout(async()=>{const msgs=await dbGetMessages();if(msgs.length)showCouncilMessage();},1000);
   }
 </script>
 </body>
