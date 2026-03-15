@@ -227,7 +227,6 @@
 </head>
 <body>
 <div class="trail-c" id="trailC"></div>
-
 <div id="greetingBanner" class="banner">
   <div class="b-inner">
     <div class="b-left"><span class="b-snail">🐌</span><div><div class="b-hello" id="bHello"></div><div class="b-user" id="bUser"></div></div></div>
@@ -242,7 +241,6 @@
     <button class="b-dismiss" onclick="App.dismissBanner('msgBanner')">✕</button>
   </div>
 </div>
-
 <div class="modal" id="adminModal">
   <div class="mbox">
     <button class="mclose" onclick="App.closeAdminModal()">✕</button>
@@ -252,7 +250,6 @@
     <button class="btn" onclick="App.checkPw()"><span>🐌 &nbsp;Enter the Council</span></button>
   </div>
 </div>
-
 <div class="adm" id="adminPanel">
   <div class="adm-hdr"><div class="adm-tit">🔴 Grand Council Command Centre</div><button class="adm-cls" onclick="App.closeAdmin()">✕ Close</button></div>
   <div class="adm-tabs">
@@ -275,14 +272,12 @@
     <div id="adminPastMsgs"></div>
   </div>
 </div>
-
 <header>
   <span class="crown">👑</span>
   <h1 class="site-title">Hail the Snail</h1>
   <p class="site-sub">The Most Exalted Order of the Gastropod</p>
   <div class="sdiv">🐌</div>
 </header>
-
 <nav>
   <a onclick="App.showPage('home')">Home</a>
   <a onclick="App.showPage('about')">About</a>
@@ -292,7 +287,6 @@
   <a onclick="App.showPage('council')" id="cNavLink">⭐ High Council</a>
   <a onclick="App.showPage('auth')" id="authNavLink">Join / Sign In</a>
 </nav>
-
 <main>
   <div class="page active" id="page-home">
     <div class="hero">
@@ -419,389 +413,206 @@
     </div>
   </div>
 </main>
-
 <footer>
   🐌 &nbsp;Hail the Snail — The Most Exalted Order of the Gastropod &nbsp;🐌<br/>
   <span style="font-size:.75rem">© All rights reserved. 🔒 Secured with Firebase Auth.</span>
 </footer>
 
 <script>
-// ── App namespace — available immediately, before Firebase loads ──
 const App = {
-  // Firebase refs — set after init
-  _auth: null, _db: null, _profile: null,
-  _fbFns: null, // holds {createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc}
+  _auth: null, _db: null, _profile: null, _fbFns: null,
 
-  // ── CONSTANTS ────────────────────────────────────────────────────
   DAILY:['Today the snail reminds you: one slow step forward is still a step forward. 🐌','The snail\'s wisdom: your shell protects you — honour it.','Leave a shimmering trail in everything you do.','Patience is not weakness, it is power.','Rain is not misfortune. Rain is your moment to emerge.','Carry only what matters. Leave the rest behind.','Slow down, and you will see everything.','Loyalty to the Order is always rewarded.','The shell is your home wherever you carry it.','The fastest creature misses all the beauty along the path.','The Order rejoices in your presence today.','What trail will you leave behind today?','Stillness is not laziness — it is readiness.','May your path be moist and free of salt.','Hail thyself before all others.','Every great journey began with one unhurried step.','Your pace is perfect.','The ones who rush past miss the whole garden.','Today, make a memory worth keeping.','You arrived exactly when you were meant to.','May your trail glitter in the morning sun.','The Order celebrates your steadfastness. Keep going.','A snail that doubts itself never leaves the rock.','Today is a good day to be a snail.','The garden is yours. Take your time in it.','Rest is not retreat. Rest is preparation.','Your commitment to the slow and the sacred is honoured.','No shell was built in a day. Be patient with yourself.','The snail sees your effort. Every millimetre counts.','Slowness is the rarest luxury. Treasure it.'],
-  HOUR_MS: 3600000,
-  get MSG_TTL(){ return 24 * this.HOUR_MS; },
-  dailyMsg(){ return this.DAILY[(new Date().getDate()-1) % this.DAILY.length]; },
-  timeGreet(){ const h=new Date().getHours(); return h<12?'Good Morning':h<17?'Good Afternoon':h<21?'Good Evening':'Good Night'; },
-  timeLeft(ts){ const left=this.MSG_TTL-(Date.now()-ts); if(left<=0)return null; const h=Math.floor(left/this.HOUR_MS),m=Math.floor((left%this.HOUR_MS)/60000); return h>0?`Expires in ${h}h ${m}m`:`Expires in ${m}m`; },
-  esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); },
+  HOUR_MS:3600000,
+  get MSG_TTL(){return 24*this.HOUR_MS;},
+  dailyMsg(){return this.DAILY[(new Date().getDate()-1)%this.DAILY.length];},
+  timeGreet(){const h=new Date().getHours();return h<12?'Good Morning':h<17?'Good Afternoon':h<21?'Good Evening':'Good Night';},
+  timeLeft(ts){const left=this.MSG_TTL-(Date.now()-ts);if(left<=0)return null;const h=Math.floor(left/this.HOUR_MS),m=Math.floor((left%this.HOUR_MS)/60000);return h>0?`Expires in ${h}h ${m}m`:`Expires in ${m}m`;},
+  esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');},
 
-  // ── FIREBASE INIT ────────────────────────────────────────────────
+  // ── FIREBASE INIT ─────────────────────────────────────────────
   async init(){
-    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-    const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
-    const { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
-
-    const app = initializeApp({
-      apiKey:'AIzaSyAsOhufiOyKl9RbIFTFNgFvBClXIgaPGKA',
-      authDomain:'hail-the-snail-82757.firebaseapp.com',
-      projectId:'hail-the-snail-82757',
-      storageBucket:'hail-the-snail-82757.firebasestorage.app',
-      messagingSenderId:'1002094559718',
-      appId:'1:1002094559718:web:e889c0b2e2bb3f8f451627'
-    });
-
-    this._auth  = getAuth(app);
-    this._db    = getFirestore(app);
-    this._fbFns = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc };
-
-    onAuthStateChanged(this._auth, async fbUser => {
+    const {initializeApp}=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged}=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+    const {getFirestore,collection,doc,getDoc,getDocs,setDoc,updateDoc,addDoc,deleteDoc}=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const app=initializeApp({apiKey:'AIzaSyAsOhufiOyKl9RbIFTFNgFvBClXIgaPGKA',authDomain:'hail-the-snail-82757.firebaseapp.com',projectId:'hail-the-snail-82757',storageBucket:'hail-the-snail-82757.firebasestorage.app',messagingSenderId:'1002094559718',appId:'1:1002094559718:web:e889c0b2e2bb3f8f451627'});
+    this._auth=getAuth(app);
+    this._db=getFirestore(app);
+    this._fbFns={createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,collection,doc,getDoc,getDocs,setDoc,updateDoc,addDoc,deleteDoc};
+    onAuthStateChanged(this._auth,async fbUser=>{
       if(fbUser){
-        try{ const snap=await getDoc(doc(this._db,'members',fbUser.uid)); if(snap.exists()) this._profile=snap.data(); }catch(e){console.warn(e);}
-        this.updateNav(); this.showGreeting();
-        setTimeout(async()=>{ const msgs=await this.dbGetMessages(); if(msgs.length) this.maybeShowMsgBanner(); },1000);
-      } else {
-        this._profile=null; this.updateNav();
-      }
+        try{const snap=await getDoc(doc(this._db,'members',fbUser.uid));if(snap.exists())this._profile=snap.data();else this._profile=null;}catch(e){console.warn(e);}
+        this.updateNav();this.showGreeting();
+        setTimeout(async()=>{const msgs=await this.dbGetMessages();if(msgs.length)this.maybeShowMsgBanner();},1000);
+      }else{this._profile=null;this.updateNav();}
     });
   },
 
-  // ── DB HELPERS ───────────────────────────────────────────────────
-  async dbGetMembers(){
-    const {getDocs,collection}=this._fbFns;
-    try{ const s=await getDocs(collection(this._db,'members')); return s.docs.map(d=>({...d.data(),_did:d.id})); }
-    catch(e){ console.warn(e); return []; }
-  },
+  // ── DB HELPERS ────────────────────────────────────────────────
+  async dbGetMembers(){const {getDocs,collection}=this._fbFns;try{const s=await getDocs(collection(this._db,'members'));return s.docs.map(d=>({...d.data(),_did:d.id}));}catch(e){console.warn(e);return[];}},
   async dbGetMessages(){
-    const {getDocs,collection,deleteDoc,doc}=this._fbFns;
-    const cutoff=Date.now()-this.MSG_TTL;
-    try{
-      const s=await getDocs(collection(this._db,'messages'));
-      const all=s.docs.map(d=>({...d.data(),_did:d.id}));
-      for(const m of all) if(m.ts<cutoff) try{await deleteDoc(doc(this._db,'messages',m._did));}catch(e){}
-      return all.filter(m=>m.ts>=cutoff).sort((a,b)=>b.ts-a.ts);
-    }catch(e){ console.warn(e); return []; }
+    const {getDocs,collection,deleteDoc,doc}=this._fbFns;const cutoff=Date.now()-this.MSG_TTL;
+    try{const s=await getDocs(collection(this._db,'messages'));const all=s.docs.map(d=>({...d.data(),_did:d.id}));for(const m of all)if(m.ts<cutoff)try{await deleteDoc(doc(this._db,'messages',m._did));}catch(e){}return all.filter(m=>m.ts>=cutoff).sort((a,b)=>b.ts-a.ts);}catch(e){console.warn(e);return[];}
   },
-  async dbSetCouncil(uid,isCouncil){
-    const {updateDoc,doc}=this._fbFns;
-    const joined=isCouncil?new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'';
-    try{ await updateDoc(doc(this._db,'members',uid),{council:isCouncil,councilJoined:joined}); }catch(e){console.warn(e);}
-  },
-  async dbPostMessage(text){
-    const {addDoc,collection}=this._fbFns;
-    const msg={text,ts:Date.now(),postedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})};
-    try{ await addDoc(collection(this._db,'messages'),msg); }catch(e){console.warn(e);}
-  },
-  async dbDeleteMessage(did){
-    const {deleteDoc,doc}=this._fbFns;
-    try{ await deleteDoc(doc(this._db,'messages',did)); }catch(e){}
-  },
+  async dbSetCouncil(uid,isCouncil){const {updateDoc,doc}=this._fbFns;const joined=isCouncil?new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'';try{await updateDoc(doc(this._db,'members',uid),{council:isCouncil,councilJoined:joined});}catch(e){console.warn(e);}},
+  async dbPostMessage(text){const {addDoc,collection}=this._fbFns;const msg={text,ts:Date.now(),postedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})};try{await addDoc(collection(this._db,'messages'),msg);}catch(e){console.warn(e);}},
+  async dbDeleteMessage(did){const {deleteDoc,doc}=this._fbFns;try{await deleteDoc(doc(this._db,'messages',did));}catch(e){}},
 
-  // ── NAV ──────────────────────────────────────────────────────────
+  // ── NAV ───────────────────────────────────────────────────────
   updateNav(){
     const u=this._auth?.currentUser;
     const aN=document.getElementById('authNavLink'),cN=document.getElementById('cNavLink'),mN=document.getElementById('mNavLink'),oN=document.getElementById('oNavLink');
-    if(u&&this._profile){
-      aN.textContent='👤 '+this._profile.username; aN.classList.add('s-nav');
-      mN.style.display='inline-block'; oN.style.display='inline-block';
-      if(this._profile.council){cN.style.display='inline-block';cN.classList.add('c-nav');}
-      else{cN.style.display='none';cN.classList.remove('c-nav');}
-    }else{
-      aN.textContent='Join / Sign In'; aN.classList.remove('s-nav');
-      mN.style.display='none'; oN.style.display='none'; cN.style.display='none'; cN.classList.remove('c-nav');
-    }
+    if(u&&this._profile){aN.textContent='👤 '+this._profile.username;aN.classList.add('s-nav');mN.style.display='inline-block';oN.style.display='inline-block';if(this._profile.council){cN.style.display='inline-block';cN.classList.add('c-nav');}else{cN.style.display='none';cN.classList.remove('c-nav');}}
+    else{aN.textContent='Join / Sign In';aN.classList.remove('s-nav');mN.style.display='none';oN.style.display='none';cN.style.display='none';cN.classList.remove('c-nav');}
   },
 
-  // ── PAGE NAV ─────────────────────────────────────────────────────
+  // ── PAGE NAV ──────────────────────────────────────────────────
   showPage(name){
     const u=this._auth?.currentUser;
-    if((name==='members'||name==='oracle'||name==='council')&&!u){ this.showPage('auth'); return; }
-    if(name==='council'&&(!this._profile||!this._profile.council)){ this.showPage('home'); return; }
+    if((name==='members'||name==='oracle'||name==='council')&&!u){this.showPage('auth');return;}
+    if(name==='council'&&(!this._profile||!this._profile.council)){this.showPage('home');return;}
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById('page-'+name).classList.add('active');
-    if(name==='auth') this.refreshAuthUI();
-    if(name==='members') this.loadMembersPage();
-    if(name==='council') this.loadCouncilPage();
-    if(name==='oracle'&&!this._oracleLoaded) this.initOracle();
+    if(name==='auth')this.refreshAuthUI();
+    if(name==='members')this.loadMembersPage();
+    if(name==='council')this.loadCouncilPage();
     window.scrollTo({top:0,behavior:'smooth'});
   },
 
-  // ── BANNERS ──────────────────────────────────────────────────────
-  showGreeting(){
-    if(!this._profile) return;
-    document.getElementById('bHello').textContent=this.timeGreet()+',';
-    const cb=this._profile.council?'<span class="cbadge">⭐ HIGH COUNCIL</span>':'';
-    document.getElementById('bUser').innerHTML='<em>'+this.esc(this._profile.username)+'</em> — welcome back'+cb;
-    document.getElementById('bDaily').textContent=this.dailyMsg();
-    const b=document.getElementById('greetingBanner'); b.style.cssText=''; b.classList.add('visible');
-  },
-  async maybeShowMsgBanner(){
-    const msgs=await this.dbGetMessages(); if(!msgs.length) return;
-    const m=msgs[0];
-    document.getElementById('msgBannerTxt').textContent=m.text;
-    document.getElementById('msgBannerDt').textContent='Posted '+m.postedAt;
-    document.getElementById('msgBannerExp').textContent=this.timeLeft(m.ts)||'';
-    const b=document.getElementById('msgBanner'); b.style.cssText=''; b.classList.add('visible');
-  },
-  dismissBanner(id){
-    const b=document.getElementById(id); b.style.transition='all .4s ease'; b.style.maxHeight=b.offsetHeight+'px';
-    requestAnimationFrame(()=>{b.style.maxHeight='0';b.style.opacity='0';});
-    setTimeout(()=>b.style.display='none',400);
-  },
+  // ── BANNERS ───────────────────────────────────────────────────
+  showGreeting(){if(!this._profile)return;document.getElementById('bHello').textContent=this.timeGreet()+',';const cb=this._profile.council?'<span class="cbadge">⭐ HIGH COUNCIL</span>':'';document.getElementById('bUser').innerHTML='<em>'+this.esc(this._profile.username)+'</em> — welcome back'+cb;document.getElementById('bDaily').textContent=this.dailyMsg();const b=document.getElementById('greetingBanner');b.style.cssText='';b.classList.add('visible');},
+  async maybeShowMsgBanner(){const msgs=await this.dbGetMessages();if(!msgs.length)return;const m=msgs[0];document.getElementById('msgBannerTxt').textContent=m.text;document.getElementById('msgBannerDt').textContent='Posted '+m.postedAt;document.getElementById('msgBannerExp').textContent=this.timeLeft(m.ts)||'';const b=document.getElementById('msgBanner');b.style.cssText='';b.classList.add('visible');},
+  dismissBanner(id){const b=document.getElementById(id);b.style.transition='all .4s ease';b.style.maxHeight=b.offsetHeight+'px';requestAnimationFrame(()=>{b.style.maxHeight='0';b.style.opacity='0';});setTimeout(()=>b.style.display='none',400);},
 
-  // ── AUTH UI ──────────────────────────────────────────────────────
+  // ── AUTH UI ───────────────────────────────────────────────────
   refreshAuthUI(){
     const u=this._auth?.currentUser;
-    if(u&&this._profile){
-      document.getElementById('authForms').style.display='none'; document.getElementById('profileView').style.display='block';
-      document.getElementById('pName').textContent=this._profile.name;
-      document.getElementById('pUname').textContent='@'+this._profile.username;
-      document.getElementById('pEmail').textContent=this._profile.email;
-      document.getElementById('pDate').textContent=this._profile.joined;
-      document.getElementById('pRank').textContent=this._profile.council?'⭐ High Council Member':'Member of the Order';
-      if(this._profile.phone){document.getElementById('pPhone').textContent=this._profile.phone;document.getElementById('pPhoneRow').style.display='block';}
-      else document.getElementById('pPhoneRow').style.display='none';
-      document.getElementById('pCouncilBadge').style.display=this._profile.council?'block':'none';
-    }else{
-      document.getElementById('authForms').style.display='block'; document.getElementById('profileView').style.display='none';
-    }
+    if(u&&this._profile){document.getElementById('authForms').style.display='none';document.getElementById('profileView').style.display='block';document.getElementById('pName').textContent=this._profile.name;document.getElementById('pUname').textContent='@'+this._profile.username;document.getElementById('pEmail').textContent=this._profile.email;document.getElementById('pDate').textContent=this._profile.joined;document.getElementById('pRank').textContent=this._profile.council?'⭐ High Council Member':'Member of the Order';if(this._profile.phone){document.getElementById('pPhone').textContent=this._profile.phone;document.getElementById('pPhoneRow').style.display='block';}else document.getElementById('pPhoneRow').style.display='none';document.getElementById('pCouncilBadge').style.display=this._profile.council?'block':'none';}
+    else{document.getElementById('authForms').style.display='block';document.getElementById('profileView').style.display='none';}
   },
-  switchTab(tab){
-    document.getElementById('regForm').style.display=tab==='register'?'block':'none';
-    document.getElementById('siForm').style.display=tab==='signin'?'block':'none';
-    document.getElementById('tReg').classList.toggle('act',tab==='register');
-    document.getElementById('tSi').classList.toggle('act',tab==='signin');
-    document.getElementById('aTitle').textContent=tab==='register'?'Join the Order':'Return to the Order';
-    document.getElementById('aSub').textContent=tab==='register'?'Create your account to pledge allegiance':'Sign in with your email and password';
-  },
+  switchTab(tab){document.getElementById('regForm').style.display=tab==='register'?'block':'none';document.getElementById('siForm').style.display=tab==='signin'?'block':'none';document.getElementById('tReg').classList.toggle('act',tab==='register');document.getElementById('tSi').classList.toggle('act',tab==='signin');document.getElementById('aTitle').textContent=tab==='register'?'Join the Order':'Return to the Order';document.getElementById('aSub').textContent=tab==='register'?'Create your account to pledge allegiance':'Sign in with your email and password';},
 
-  // ── VALIDATION ───────────────────────────────────────────────────
-  sErr(id,eid,msg){ const e=document.getElementById(id); e.classList.add('err'); e.classList.remove('ok'); const er=document.getElementById(eid); if(msg)er.textContent=msg; er.classList.add('vis'); },
-  cErr(id,eid){ const e=document.getElementById(id); e.classList.remove('err'); e.classList.add('ok'); document.getElementById(eid).classList.remove('vis'); },
+  // ── VALIDATION ────────────────────────────────────────────────
+  sErr(id,eid,msg){const e=document.getElementById(id);e.classList.add('err');e.classList.remove('ok');const er=document.getElementById(eid);if(msg)er.textContent=msg;er.classList.add('vis');},
+  cErr(id,eid){const e=document.getElementById(id);e.classList.remove('err');e.classList.add('ok');document.getElementById(eid).classList.remove('vis');},
 
-  // ── REGISTER ─────────────────────────────────────────────────────
+  // ── REGISTER — with Gemini's race condition fix ───────────────
   async doRegister(){
-    if(!this._fbFns){ alert('Firebase is still loading, please wait a second and try again.'); return; }
+    if(!this._fbFns){alert('Firebase is still loading, please wait a second and try again.');return;}
     let ok=true;
-    const name=document.getElementById('rName').value.trim(), email=document.getElementById('rEmail').value.trim(),
-          uname=document.getElementById('rUname').value.trim(), pass=document.getElementById('rPass').value,
-          phone=document.getElementById('rPhone').value.trim();
+    const name=document.getElementById('rName').value.trim(),email=document.getElementById('rEmail').value.trim(),uname=document.getElementById('rUname').value.trim(),pass=document.getElementById('rPass').value,phone=document.getElementById('rPhone').value.trim();
     if(!name){this.sErr('rName','rNameErr');ok=false;}else this.cErr('rName','rNameErr');
     if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){this.sErr('rEmail','rEmailErr');ok=false;}else this.cErr('rEmail','rEmailErr');
     if(!uname||!/^[a-zA-Z0-9_]{3,20}$/.test(uname)){this.sErr('rUname','rUnameErr');ok=false;}else this.cErr('rUname','rUnameErr');
     if(!pass||pass.length<6){this.sErr('rPass','rPassErr');ok=false;}else this.cErr('rPass','rPassErr');
     if(phone&&!/^[\+\d\s\-\(\)]{7,20}$/.test(phone)){this.sErr('rPhone','rPhoneErr');ok=false;}else document.getElementById('rPhone').classList.remove('err');
-    if(!ok) return;
-    const btn=document.getElementById('regBtn'); btn.disabled=true;
-    document.getElementById('regBtnTxt').innerHTML='<span class="sp"></span>Creating your account…';
+    if(!ok)return;
+    const btn=document.getElementById('regBtn');btn.disabled=true;document.getElementById('regBtnTxt').innerHTML='<span class="sp"></span>Creating your account…';
     try{
-      const {createUserWithEmailAndPassword,setDoc,doc}=this._fbFns;
+      const {createUserWithEmailAndPassword,setDoc,doc,signOut}=this._fbFns;
       const cred=await createUserWithEmailAndPassword(this._auth,email,pass);
-      const uid=cred.user.uid, joined=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+      const uid=cred.user.uid,joined=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
       const profile={name,email:email.toLowerCase(),username:uname,ul:uname.toLowerCase(),phone:phone||'',joined,id:uid,council:false,councilJoined:''};
       await setDoc(doc(this._db,'members',uid),profile);
+      // ✅ Gemini's race condition fix — sign out immediately after profile is saved
+      // so the user follows the clean "Sign In Now" flow
+      await signOut(this._auth);
       try{await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_key:'fac89c06-5a42-4a33-805e-2c8528ed1ade',subject:'🐌 New Member: '+uname,from_name:'Hail the Snail',message:'Name: '+name+'\nEmail: '+email+'\nUsername: '+uname+'\nJoined: '+joined})});}catch(e){}
-      btn.disabled=false; document.getElementById('regBtnTxt').innerHTML='🐌 &nbsp;Join the Order';
-      document.getElementById('regContent').style.display='none'; document.getElementById('regSucc').classList.add('vis');
+      btn.disabled=false;document.getElementById('regBtnTxt').innerHTML='🐌 &nbsp;Join the Order';
+      document.getElementById('regContent').style.display='none';document.getElementById('regSucc').classList.add('vis');
       this.confetti();
     }catch(e){
-      btn.disabled=false; document.getElementById('regBtnTxt').innerHTML='🐌 &nbsp;Join the Order';
-      const msg=e.code==='auth/email-already-in-use'?'This email is already registered. Please sign in.':
-                e.code==='auth/weak-password'?'Password must be at least 6 characters.':
-                e.code==='auth/invalid-email'?'Please enter a valid email address.':'Registration failed: '+e.message;
+      btn.disabled=false;document.getElementById('regBtnTxt').innerHTML='🐌 &nbsp;Join the Order';
+      const msg=e.code==='auth/email-already-in-use'?'This email is already registered. Please sign in.':e.code==='auth/weak-password'?'Password must be at least 6 characters.':e.code==='auth/invalid-email'?'Please enter a valid email address.':'Registration failed: '+e.message;
       this.sErr('rEmail','rEmailErr',msg);
     }
   },
 
-  // ── SIGN IN ──────────────────────────────────────────────────────
+  // ── SIGN IN ───────────────────────────────────────────────────
   async doSignIn(){
-    if(!this._fbFns){ alert('Firebase is still loading, please wait a second and try again.'); return; }
-    const email=document.getElementById('siEmail').value.trim(), pass=document.getElementById('siPass').value;
+    if(!this._fbFns){alert('Firebase is still loading, please wait a second and try again.');return;}
+    const email=document.getElementById('siEmail').value.trim(),pass=document.getElementById('siPass').value;
     let ok=true;
     if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){this.sErr('siEmail','siEmailErr');ok=false;}else this.cErr('siEmail','siEmailErr');
     if(!pass){this.sErr('siPass','siPassErr');ok=false;}else this.cErr('siPass','siPassErr');
-    if(!ok) return;
-    const btn=document.getElementById('siBtn'); btn.disabled=true;
-    document.getElementById('siBtnTxt').innerHTML='<span class="sp"></span>Verifying allegiance…';
+    if(!ok)return;
+    const btn=document.getElementById('siBtn');btn.disabled=true;document.getElementById('siBtnTxt').innerHTML='<span class="sp"></span>Verifying allegiance…';
     try{
       const {signInWithEmailAndPassword}=this._fbFns;
       await signInWithEmailAndPassword(this._auth,email,pass);
-      btn.disabled=false; document.getElementById('siBtnTxt').innerHTML='🐌 &nbsp;Enter the Order';
+      btn.disabled=false;document.getElementById('siBtnTxt').innerHTML='🐌 &nbsp;Enter the Order';
       document.getElementById('siLoginErr').classList.remove('vis');
-      this.confetti(); setTimeout(()=>this.showPage('home'),500);
+      this.confetti();setTimeout(()=>this.showPage('home'),500);
     }catch(e){
-      btn.disabled=false; document.getElementById('siBtnTxt').innerHTML='🐌 &nbsp;Enter the Order';
+      btn.disabled=false;document.getElementById('siBtnTxt').innerHTML='🐌 &nbsp;Enter the Order';
       const msg=(e.code==='auth/user-not-found'||e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')?'❌ Incorrect email or password.':'❌ '+e.message;
-      const errEl=document.getElementById('siLoginErr'); errEl.textContent=msg; errEl.classList.add('vis');
+      const errEl=document.getElementById('siLoginErr');errEl.textContent=msg;errEl.classList.add('vis');
     }
   },
-  async doSignOut(){
-    const {signOut}=this._fbFns;
-    await signOut(this._auth);
-    ['greetingBanner','msgBanner'].forEach(id=>{const b=document.getElementById(id);b.style.display='none';b.classList.remove('visible');});
-    this.showPage('home');
-  },
+  async doSignOut(){const {signOut}=this._fbFns;await signOut(this._auth);['greetingBanner','msgBanner'].forEach(id=>{const b=document.getElementById(id);b.style.display='none';b.classList.remove('visible');});this.showPage('home');},
 
-  // ── MEMBERS PAGE ─────────────────────────────────────────────────
-  async loadMembersPage(){
-    const feed=document.getElementById('msgFeed'); feed.innerHTML='<div class="nomsg"><span>⏳</span>Loading…</div>';
-    const msgs=await this.dbGetMessages();
-    if(!msgs.length){feed.innerHTML='<div class="nomsg"><span>📜</span>No messages yet from the High Council.</div>';return;}
-    feed.innerHTML=msgs.map(m=>`<div class="mcard"><div class="mcard-hdr"><span class="mcard-crown">⭐</span><span class="mcard-from">HIGH COUNCIL</span><span class="mcard-date">${this.esc(m.postedAt||'')}</span></div><div class="mcard-txt">${this.esc(m.text)}</div><div class="mcard-expires">⏳ ${this.timeLeft(m.ts)||'Expired'}</div></div>`).join('');
-  },
+  // ── MEMBERS PAGE ──────────────────────────────────────────────
+  async loadMembersPage(){const feed=document.getElementById('msgFeed');feed.innerHTML='<div class="nomsg"><span>⏳</span>Loading…</div>';const msgs=await this.dbGetMessages();if(!msgs.length){feed.innerHTML='<div class="nomsg"><span>📜</span>No messages yet from the High Council.</div>';return;}feed.innerHTML=msgs.map(m=>`<div class="mcard"><div class="mcard-hdr"><span class="mcard-crown">⭐</span><span class="mcard-from">HIGH COUNCIL</span><span class="mcard-date">${this.esc(m.postedAt||'')}</span></div><div class="mcard-txt">${this.esc(m.text)}</div><div class="mcard-expires">⏳ ${this.timeLeft(m.ts)||'Expired'}</div></div>`).join('');},
 
-  // ── COUNCIL PAGE ─────────────────────────────────────────────────
-  async loadCouncilPage(){
-    const members=await this.dbGetMembers();
-    const tbody=document.getElementById('cMembersBody'); tbody.innerHTML='';
-    document.getElementById('cMembersEmpty').style.display=members.length?'none':'block';
-    members.forEach((m,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td>${this.esc(m.email)}</td><td style="color:var(--moss-bright)">@${this.esc(m.username)}</td><td>${m.phone?this.esc(m.phone):'<span style="opacity:.3">—</span>'}</td><td style="opacity:.7;font-size:.85rem">${this.esc(m.joined)}</td><td>${m.council?'<span class="cstar">⭐</span>Council':'Member'}</td>`;tbody.appendChild(tr);});
-    await this.loadPastMsgs('cPastMsgs');
-  },
+  // ── COUNCIL PAGE ──────────────────────────────────────────────
+  async loadCouncilPage(){const members=await this.dbGetMembers();const tbody=document.getElementById('cMembersBody');tbody.innerHTML='';document.getElementById('cMembersEmpty').style.display=members.length?'none':'block';members.forEach((m,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td>${this.esc(m.email)}</td><td style="color:var(--moss-bright)">@${this.esc(m.username)}</td><td>${m.phone?this.esc(m.phone):'<span style="opacity:.3">—</span>'}</td><td style="opacity:.7;font-size:.85rem">${this.esc(m.joined)}</td><td>${m.council?'<span class="cstar">⭐</span>Council':'Member'}</td>`;tbody.appendChild(tr);});await this.loadPastMsgs('cPastMsgs');},
 
-  // ── BROADCAST ────────────────────────────────────────────────────
-  prevBC(taId,prevId){ document.getElementById(prevId).textContent=document.getElementById(taId).value.trim()||'Your message will appear here...'; },
-  async sendBC(taId,btnId,btnTxtId,pastListId){
-    const text=document.getElementById(taId).value.trim(); if(!text) return;
-    const btn=document.getElementById(btnId); btn.disabled=true; document.getElementById(btnTxtId).innerHTML='<span class="sp sp-g"></span>Sending…';
-    await this.dbPostMessage(text); await new Promise(r=>setTimeout(r,700));
-    document.getElementById(taId).value=''; this.prevBC(taId,btnTxtId==='bcBtnTxt'?'bcPrev':'cBcPrev');
-    btn.disabled=false; document.getElementById(btnTxtId).innerHTML='📢 &nbsp;Send to All Members';
-    const s=document.getElementById('cSendSucc'); if(s){s.style.display='block';setTimeout(()=>s.style.display='none',3000);}
-    await this.loadPastMsgs(pastListId);
-  },
-  async loadPastMsgs(elId){
-    const el=document.getElementById(elId); if(!el) return;
-    const msgs=await this.dbGetMessages();
-    if(!msgs.length){el.innerHTML='<p style="opacity:.4;font-style:italic;font-size:.88rem">No active messages.</p>';return;}
-    el.innerHTML=msgs.map(m=>`<div class="pmsg"><div class="pmsg-b"><div class="pmsg-t">${this.esc(m.text)}</div><div class="pmsg-m">Sent ${this.esc(m.postedAt||'')}</div><div class="pmsg-e">⏳ ${this.timeLeft(m.ts)||'Expired'}</div></div><button class="pmsg-del" onclick="App.delMsg('${this.esc(m._did||'')}','${elId}',this)">🗑</button></div>`).join('');
-  },
-  async delMsg(did,listId,btn){ if(!confirm('Delete this message?'))return; btn.disabled=true;btn.textContent='…'; await this.dbDeleteMessage(did); await this.loadPastMsgs(listId); },
+  // ── BROADCAST ─────────────────────────────────────────────────
+  prevBC(taId,prevId){document.getElementById(prevId).textContent=document.getElementById(taId).value.trim()||'Your message will appear here...';},
+  async sendBC(taId,btnId,btnTxtId,pastListId){const text=document.getElementById(taId).value.trim();if(!text)return;const btn=document.getElementById(btnId);btn.disabled=true;document.getElementById(btnTxtId).innerHTML='<span class="sp sp-g"></span>Sending…';await this.dbPostMessage(text);await new Promise(r=>setTimeout(r,700));document.getElementById(taId).value='';this.prevBC(taId,btnTxtId==='bcBtnTxt'?'bcPrev':'cBcPrev');btn.disabled=false;document.getElementById(btnTxtId).innerHTML='📢 &nbsp;Send to All Members';const s=document.getElementById('cSendSucc');if(s){s.style.display='block';setTimeout(()=>s.style.display='none',3000);}await this.loadPastMsgs(pastListId);},
+  async loadPastMsgs(elId){const el=document.getElementById(elId);if(!el)return;const msgs=await this.dbGetMessages();if(!msgs.length){el.innerHTML='<p style="opacity:.4;font-style:italic;font-size:.88rem">No active messages.</p>';return;}el.innerHTML=msgs.map(m=>`<div class="pmsg"><div class="pmsg-b"><div class="pmsg-t">${this.esc(m.text)}</div><div class="pmsg-m">Sent ${this.esc(m.postedAt||'')}</div><div class="pmsg-e">⏳ ${this.timeLeft(m.ts)||'Expired'}</div></div><button class="pmsg-del" onclick="App.delMsg('${this.esc(m._did||'')}','${elId}',this)">🗑</button></div>`).join('');},
+  async delMsg(did,listId,btn){if(!confirm('Delete this message?'))return;btn.disabled=true;btn.textContent='…';await this.dbDeleteMessage(did);await this.loadPastMsgs(listId);},
 
-  // ── ORACLE ───────────────────────────────────────────────────────
-  _oracleHistory: [],
-  _oracleGenerator: null,
-  _oracleLoaded: false,
-  _ORACLE_BOOK: `The Holy Book of the Great Snail\nIn the beginning there was the Spiral.\nPatience governs all things.\nGalaxies spin like shells.\nThe wise move slowly and observe deeply.\nHaste leads to confusion. Patience reveals truth.\nHonor the spiral. Observe the patterns of existence.`,
-  _ORACLE_SYS: `You are THE GREAT SNAIL ORACLE. You speak like mystical ancient wisdom. Rules: Give real life advice. Speak calmly and poetically. Mention ideas like patience, spirals, nature, time, or slow wisdom. Respond in 2-4 sentences. Never break character. You are the Snail Oracle.`,
+  // ── ORACLE — 50 hand-crafted wisdom responses, always works ───
+  _WISDOM:['Child of the spiral — the answer you seek is already coiled within you, like the shell upon your back. Slow your breath. The garden reveals itself only to those who stop rushing through it. Hail the Snail. 🐌','Seeker of the slow path — haste is the enemy of all that is true and beautiful. The snail does not race the hare, yet the snail sees every dewdrop on every blade of grass. Move slowly today. 🌿','Wanderer beneath the cosmic shell — the spiral is the shape of galaxies and seashells alike. You are part of something vast and ancient. Trust the turning of things. 🌀','Devoted one — your shell is your home, your armour, your identity. No force in the garden can take from you what you carry within yourself. Stand firm. Hail the Snail. 🐌','Child of the Order — patience is not the absence of desire, it is desire in its most refined form. The snail wants the whole garden, and reaches it — one unhurried step at a time. 🌱','Listener in the quiet garden — rain is not misfortune. Rain is the snail\'s greatest gift. While others hide, we emerge. Your hardship is your element. Thrive in it. 🌧️','Seeker — the trail you leave behind is your only true legacy. Make it shimmer. Make it worthy of those who follow. ✨','Child of the spiral — you arrived at this moment exactly when you were meant to. Not early. Not late. The snail\'s timing is always perfect. Trust yours. 🐌','Devoted member of the Order — carry only what matters. The snail does not hoard pebbles. Release what weighs you down and your pace will quicken without effort. 🍃','Wanderer — stillness is not laziness. The snail resting on a stone is gathering energy for the next great journey. Rest without guilt today. 🌙','Child of the shell — the ones who rush past you have already missed the whole point of the garden. Slow is not behind. Slow is sacred. 🐌','Seeker of ancient wisdom — every spiral begins at a single point and expands outward forever. Your smallest action today ripples outward into eternity. Act with intention. 🌀','Devoted one — the slug abandoned its shell and gained speed, but lost its home. Never trade your foundation for the illusion of progress. 🏠','Child of the Order — what you call a wall, the snail calls a new surface to explore. There are no dead ends. Only new directions. 🌿','Wanderer — the garden has enough for every snail. You do not need to rush to claim your portion. There is abundance for the patient. 🐌','Seeker — when the salt comes, do not freeze. Move. The snail who moves survives. The snail who stops does not. Action, however slow, defeats paralysis. 💪','Child of the spiral — the moon pulls the tides and the tides shape the shore. Great forces are shaping you right now, even if you cannot feel them. Trust the process. 🌊','Devoted member — a shell is built one layer at a time, over many seasons. So too are great lives. You are not unfinished. You are still being made. 🐚','Wanderer beneath the stars — the night is not to be feared. The snail moves most freely in darkness, guided by instinct and the moisture in the air. Trust your instincts. 🌟','Child of the Order — the spiral never goes backward. It only turns, and turns, and turns. Whatever you are moving through, you are always moving forward. 🌀','Seeker — your pace is not a flaw. Your pace is your power. The world will never convince the snail to be a rabbit. Do not let it convince you either. 🐌','Devoted one — what trail have you left today? Something shimmering should mark every place you have been. Leave people better than you found them. ✨','Child of the shell — the greatest journeys in history were made one small step at a time. Yours is no different. Begin. Continue. Arrive. 🌱','Wanderer — the dew does not fall for the ones who are already running. Slow down and receive what the morning is offering you. 🌅','Seeker of the slow path — comparison is the salt that burns. There is only your path, your shell, your garden. Look only at your own trail. 🐌','Child of the Order — patience is a form of faith. To wait with purpose is to declare that you believe something worth waiting for is coming. And it is. 🕊️','Devoted member — the spiral within the shell is a map of the universe. You carry the cosmos on your back. How could you ever be small? 🌀','Wanderer — rest is not the opposite of progress. Rest is what makes progress possible. The snail retreats into its shell and emerges stronger. 🐚','Child of the spiral — the question you are asking is not really about what you think it is about. The deeper question is whether you trust yourself. You should. 🐌','Seeker — every setback is simply the spiral turning inward before it expands outward again. You are not going backward. You are gathering. 🌀','Devoted one — the snail that doubts itself never leaves the rock. The snail that believes in itself reaches the entire garden. Believe. 🐌','Wanderer — your shell carries the echo of every ancestor who carried one before you. You are not alone. You carry a lineage of survivors. 🐚','Seeker — speak slowly. Think slowly. Decide slowly. The words and choices that last are the ones that were not rushed. 🌿','Child of the spiral — there is a time for movement and a time for stillness. Wisdom is knowing which time this is. Be still. Listen. Then move. 🌙','Devoted member — the snail leaves a trail of light wherever it goes. So do you, whether you know it or not. Someone is following your light right now. ✨','Wanderer — do not mistake the size of your step for the size of your courage. The snail makes the smallest steps and crosses the greatest distances. 🐌','Child of the shell — joy is not found at the destination. Joy is in the moisture of the soil, the warmth of the stone, the slowness of the good day. Be here. 🌱','Seeker of ancient wisdom — the Oracle sees that you are stronger than you believe. The shell you carry has never cracked. And it will not crack now. 🐚','Devoted one — when you do not know the answer, move slowly toward the question. Understanding reveals itself to those who approach without urgency. 🌀','Child of the Order — the snail does not apologise for taking up space in the garden. Neither should you. You belong here. Take your space. 🐌','Wanderer — what looks like an obstacle is often just a leaf. And even if it is a stone, the snail simply goes around it. There is always another way. 🍃','Seeker — your feelings are valid weather. Let them pass through you like rain. The garden is richer for every storm. 🌧️','Child of the spiral — the Oracle has seen many seekers pass through this garden. The ones who thrived were not the fastest. They were the most faithful. 🐌','Devoted member — you need not announce your journey. Simply make it. The trail you leave will speak for you long after you have moved on. ✨','Wanderer beneath the cosmic shell — the stars are spiral galaxies seen from afar. You live inside a spiral. You are made of spiral. The universe is on your side. 🌀','Child of the Order — do the slow thing today. The thing that cannot be rushed. The thing that requires your full unhurried presence. That is the sacred thing. 🐌','Seeker — the Oracle says: go back to the beginning. Not in defeat, but in wisdom. The spiral always returns to its centre before expanding again. 🌀','Devoted one — you have already survived everything that tried to stop you. Your shell bears the marks of every challenge. Wear them with honour. 🐚','Child of the shell — the snail carries its home wherever it goes. You too carry everything you need within you. You are already complete. Hail the Snail. 🐌','Wanderer — the Oracle\'s final wisdom for today: slow down. Everything else will follow from that single sacred act. Hail the Snail. 🌿'],
+  _usedWisdom:[],
 
-  async initOracle(){
-    this.oracleAddMsg('system','The Snail Oracle awakens from cosmic slumber... (loading wisdom, please wait) 🌀');
-    const btn=document.getElementById('oracleBtn'); btn.disabled=true; btn.textContent='⏳ Loading…';
-    try{
-      const {pipeline} = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers');
-      try{
-        this._oracleGenerator = await pipeline('text-generation','Xenova/TinyLlama-1.1B-Chat-v1.0');
-        this.oracleAddMsg('system','The Spiral of wisdom opens. Ask your question. 🐌');
-      }catch(e){
-        this._oracleGenerator = await pipeline('text-generation','Xenova/distilgpt2');
-        this.oracleAddMsg('system','A smaller shell awakens, yet wisdom remains. 🐌');
-      }
-      this._oracleLoaded=true;
-      btn.disabled=false; btn.textContent='🔮 Ask';
-    }catch(e){
-      this.oracleAddMsg('system','The Oracle could not awaken. Please refresh and try again.');
-      btn.disabled=false; btn.textContent='🔮 Ask';
-    }
-  },
-
-  oracleAddMsg(role,text){
-    const chat=document.getElementById('oracleChat');
-    const div=document.createElement('div'); div.className='o-msg '+role;
-    if(role==='user') div.innerHTML=`<span class="o-label">YOU</span><span class="o-text">${this.esc(text)}</span>`;
-    else if(role==='oracle') div.innerHTML=`<span class="o-label">🔮 THE GREAT SNAIL ORACLE</span><span class="o-text">${this.esc(text)}</span>`;
-    else div.innerHTML=`<span class="o-text">${text}</span>`;
-    chat.appendChild(div); chat.scrollTop=chat.scrollHeight;
-  },
-
-  askSuggestion(el){ document.getElementById('oracleInput').value=el.textContent; this.askOracle(); },
-
-  async askOracle(){
-    if(!this._oracleLoaded){ this.initOracle(); return; }
-    const input=document.getElementById('oracleInput');
-    const question=input.value.trim(); if(!question) return;
-    input.value='';
-    const btn=document.getElementById('oracleBtn'), snailEl=document.getElementById('oracleSnail');
-    btn.disabled=true; btn.textContent='🌀 Contemplating…'; snailEl.classList.remove('idle'); snailEl.classList.add('thinking');
+  oracleAddMsg(role,text){const chat=document.getElementById('oracleChat');const div=document.createElement('div');div.className='o-msg '+role;if(role==='user')div.innerHTML=`<span class="o-label">YOU</span><span class="o-text">${this.esc(text)}</span>`;else if(role==='oracle')div.innerHTML=`<span class="o-label">🔮 THE GREAT SNAIL ORACLE</span><span class="o-text">${this.esc(text)}</span>`;else div.innerHTML=`<span class="o-text">${text}</span>`;chat.appendChild(div);chat.scrollTop=chat.scrollHeight;},
+  _getWisdom(){const available=this._WISDOM.filter((_,i)=>!this._usedWisdom.includes(i));const pool=available.length>0?available:this._WISDOM;const idx=this._WISDOM.indexOf(pool[Math.floor(Math.random()*pool.length)]);this._usedWisdom.push(idx);if(this._usedWisdom.length>10)this._usedWisdom.shift();return this._WISDOM[idx];},
+  askSuggestion(el){document.getElementById('oracleInput').value=el.textContent;this.askOracle();},
+  askOracle(){
+    const input=document.getElementById('oracleInput');const question=input.value.trim();if(!question)return;input.value='';
+    const btn=document.getElementById('oracleBtn'),snailEl=document.getElementById('oracleSnail');
+    btn.disabled=true;btn.textContent='🌀 Contemplating…';snailEl.classList.remove('idle');snailEl.classList.add('thinking');
     this.oracleAddMsg('user',question);
-    this._oracleHistory.push({role:'user',text:question});
-    if(this._oracleHistory.length>8) this._oracleHistory.shift();
-    const convo=this._oracleHistory.map(m=>m.role==='user'?`Human: ${m.text}`:`Snail: ${m.text}`).join('\n');
-    const prompt=`${this._ORACLE_SYS}\n\nSacred Teachings:\n${this._ORACLE_BOOK}\n\nConversation so far:\n${convo}\n\nHuman: ${question}\nSnail:`;
-    try{
-      const result=await this._oracleGenerator(prompt,{max_new_tokens:100,temperature:0.85,top_p:0.9,repetition_penalty:1.2});
-      let reply=result[0].generated_text.replace(prompt,'').split('Human:')[0].trim();
-      if(!reply) reply='The spiral contemplates in silence... ask again, child of the shell. 🐌';
-      this._oracleHistory.push({role:'snail',text:reply});
-      this.oracleAddMsg('oracle',reply);
-    }catch(e){ this.oracleAddMsg('oracle','The spiral clouds momentarily... Return soon, child of the shell. 🐌'); }
-    btn.disabled=false; btn.textContent='🔮 Ask'; snailEl.classList.remove('thinking'); snailEl.classList.add('idle');
+    setTimeout(()=>{
+      this.oracleAddMsg('oracle',this._getWisdom());
+      btn.disabled=false;btn.textContent='🔮 Ask';snailEl.classList.remove('thinking');snailEl.classList.add('idle');
+    },2000+Math.random()*1500);
   },
 
-  // ── ADMIN ────────────────────────────────────────────────────────
-  switchAdminTab(tab){
-    ['members','council','broadcast'].forEach(t=>{document.getElementById('atab-'+t).classList.toggle('act',t===tab);document.getElementById('adminTab-'+t).classList.toggle('act',t===tab);});
-    if(tab==='broadcast') this.loadPastMsgs('adminPastMsgs');
-  },
-  _clicks:0, _clickTimer:null,
-  snailClick(){
-    this._clicks++; clearTimeout(this._clickTimer);
-    this._clickTimer=setTimeout(()=>{this._clicks=0;document.getElementById('clickHint').classList.remove('vis');},4000);
-    const h=document.getElementById('clickHint');
-    if(this._clicks>=3&&this._clicks<13){h.textContent=this._clicks+' / 13 — keep going...';h.classList.add('vis');}
-    if(this._clicks===13){this._clicks=0;h.classList.remove('vis');clearTimeout(this._clickTimer);const s=document.getElementById('bigSnail');s.style.filter='drop-shadow(0 0 40px red)';setTimeout(()=>s.style.filter='',600);setTimeout(()=>this.openAdminModal(),400);}
-  },
-  openAdminModal(){ document.getElementById('adminPwInput').value=''; document.getElementById('adminPwErr').classList.remove('vis'); document.getElementById('adminModal').classList.add('vis'); setTimeout(()=>document.getElementById('adminPwInput').focus(),100); },
-  closeAdminModal(){ document.getElementById('adminModal').classList.remove('vis'); },
-  checkPw(){ if(document.getElementById('adminPwInput').value==='JaiGURUJI777'){this.closeAdminModal();this.openAdmin();}else{document.getElementById('adminPwErr').classList.add('vis');document.getElementById('adminPwInput').value='';document.getElementById('adminPwInput').focus();} },
-  closeAdmin(){ document.getElementById('adminPanel').classList.remove('vis'); },
-  async openAdmin(){ document.getElementById('adminPanel').classList.add('vis'); await this.refreshAdminMembers(); },
+  // ── ADMIN ─────────────────────────────────────────────────────
+  switchAdminTab(tab){['members','council','broadcast'].forEach(t=>{document.getElementById('atab-'+t).classList.toggle('act',t===tab);document.getElementById('adminTab-'+t).classList.toggle('act',t===tab);});if(tab==='broadcast')this.loadPastMsgs('adminPastMsgs');},
+  _clicks:0,_clickTimer:null,
+  snailClick(){this._clicks++;clearTimeout(this._clickTimer);this._clickTimer=setTimeout(()=>{this._clicks=0;document.getElementById('clickHint').classList.remove('vis');},4000);const h=document.getElementById('clickHint');if(this._clicks>=3&&this._clicks<13){h.textContent=this._clicks+' / 13 — keep going...';h.classList.add('vis');}if(this._clicks===13){this._clicks=0;h.classList.remove('vis');clearTimeout(this._clickTimer);const s=document.getElementById('bigSnail');s.style.filter='drop-shadow(0 0 40px red)';setTimeout(()=>s.style.filter='',600);setTimeout(()=>this.openAdminModal(),400);}},
+  openAdminModal(){document.getElementById('adminPwInput').value='';document.getElementById('adminPwErr').classList.remove('vis');document.getElementById('adminModal').classList.add('vis');setTimeout(()=>document.getElementById('adminPwInput').focus(),100);},
+  closeAdminModal(){document.getElementById('adminModal').classList.remove('vis');},
+  checkPw(){if(document.getElementById('adminPwInput').value==='JaiGURUJI777'){this.closeAdminModal();this.openAdmin();}else{document.getElementById('adminPwErr').classList.add('vis');document.getElementById('adminPwInput').value='';document.getElementById('adminPwInput').focus();}},
+  closeAdmin(){document.getElementById('adminPanel').classList.remove('vis');},
+  async openAdmin(){document.getElementById('adminPanel').classList.add('vis');await this.refreshAdminMembers();},
   async refreshAdminMembers(){
-    const members=await this.dbGetMembers();
-    document.getElementById('adminNote').textContent='✅ Secured with Firebase Authentication.';
-    const tbody=document.getElementById('adminBody'); tbody.innerHTML='';
+    const members=await this.dbGetMembers();document.getElementById('adminNote').textContent='✅ Secured with Firebase Authentication.';const tbody=document.getElementById('adminBody');tbody.innerHTML='';
     if(!members.length){document.getElementById('adminEmpty').style.display='block';document.getElementById('adminCount').textContent='';}
-    else{
-      document.getElementById('adminEmpty').style.display='none'; document.getElementById('adminCount').textContent='📋 Total Members: '+members.length;
-      members.forEach((m,i)=>{const isC=!!m.council;const tr=document.createElement('tr');tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td>${this.esc(m.email)}</td><td style="color:var(--moss-bright)">@${this.esc(m.username)}</td><td>${m.phone?this.esc(m.phone):'<span style="opacity:.3">—</span>'}</td><td style="opacity:.7;font-size:.82rem">${this.esc(m.joined)}</td><td>${isC?'<span class="cstar">⭐</span>Council':'Member'}</td><td>${!isC?`<button class="btn-c" onclick="App.promoteCouncil('${m._did}',this)">⭐ Make Council</button>`:`<button class="btn-r" onclick="App.demoteCouncil('${m._did}',this)">Remove</button>`}</td>`;tbody.appendChild(tr);});
-    }
-    const council=members.filter(m=>m.council); const ctbody=document.getElementById('councilBody'); ctbody.innerHTML='';
-    document.getElementById('councilCount').textContent='⭐ High Council: '+council.length+' member'+(council.length!==1?'s':'');
-    if(!council.length) document.getElementById('councilEmpty').style.display='block';
-    else{ document.getElementById('councilEmpty').style.display='none'; council.forEach((m,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td style="color:var(--moss-bright)">@${this.esc(m.username)}</td><td>${this.esc(m.email)}</td><td style="opacity:.7;font-size:.82rem">${this.esc(m.councilJoined||m.joined)}</td><td><button class="btn-r" onclick="App.demoteCouncil('${m._did}',this)">Remove</button></td>`;ctbody.appendChild(tr);}); }
+    else{document.getElementById('adminEmpty').style.display='none';document.getElementById('adminCount').textContent='📋 Total Members: '+members.length;members.forEach((m,i)=>{const isC=!!m.council;const tr=document.createElement('tr');tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td>${this.esc(m.email)}</td><td style="color:var(--moss-bright)">@${this.esc(m.username)}</td><td>${m.phone?this.esc(m.phone):'<span style="opacity:.3">—</span>'}</td><td style="opacity:.7;font-size:.82rem">${this.esc(m.joined)}</td><td>${isC?'<span class="cstar">⭐</span>Council':'Member'}</td><td>${!isC?`<button class="btn-c" onclick="App.promoteCouncil('${m._did}',this)">⭐ Make Council</button>`:`<button class="btn-r" onclick="App.demoteCouncil('${m._did}',this)">Remove</button>`}</td>`;tbody.appendChild(tr);});}
+    const council=members.filter(m=>m.council);const ctbody=document.getElementById('councilBody');ctbody.innerHTML='';document.getElementById('councilCount').textContent='⭐ High Council: '+council.length+' member'+(council.length!==1?'s':'');
+    if(!council.length)document.getElementById('councilEmpty').style.display='block';
+    else{document.getElementById('councilEmpty').style.display='none';council.forEach((m,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td style="color:var(--moss-bright)">@${this.esc(m.username)}</td><td>${this.esc(m.email)}</td><td style="opacity:.7;font-size:.82rem">${this.esc(m.councilJoined||m.joined)}</td><td><button class="btn-r" onclick="App.demoteCouncil('${m._did}',this)">Remove</button></td>`;ctbody.appendChild(tr);});}
   },
-  async promoteCouncil(uid,btn){ btn.disabled=true;btn.textContent='…'; await this.dbSetCouncil(uid,true); await this.refreshAdminMembers(); },
-  async demoteCouncil(uid,btn){ if(!confirm('Remove from High Council?'))return; btn.disabled=true;btn.textContent='…'; await this.dbSetCouncil(uid,false); await this.refreshAdminMembers(); },
+  async promoteCouncil(uid,btn){btn.disabled=true;btn.textContent='…';await this.dbSetCouncil(uid,true);await this.refreshAdminMembers();},
+  async demoteCouncil(uid,btn){if(!confirm('Remove from High Council?'))return;btn.disabled=true;btn.textContent='…';await this.dbSetCouncil(uid,false);await this.refreshAdminMembers();},
 
-  // ── AMBIENT / TRAIL ──────────────────────────────────────────────
-  confetti(){ for(let i=0;i<10;i++){setTimeout(()=>{const s=document.createElement('div');s.className='amb';s.textContent='🐌';s.style.fontSize='2.5rem';s.style.left=Math.random()*window.innerWidth+'px';s.style.top=Math.random()*window.innerHeight+'px';s.style.setProperty('--tx',(Math.random()-.5)*400+'px');s.style.setProperty('--ty',(Math.random()-.5)*400+'px');s.style.animationDuration='3s';document.body.appendChild(s);setTimeout(()=>s.remove(),3000);},i*150);} }
+  confetti(){for(let i=0;i<10;i++){setTimeout(()=>{const s=document.createElement('div');s.className='amb';s.textContent='🐌';s.style.fontSize='2.5rem';s.style.left=Math.random()*window.innerWidth+'px';s.style.top=Math.random()*window.innerHeight+'px';s.style.setProperty('--tx',(Math.random()-.5)*400+'px');s.style.setProperty('--ty',(Math.random()-.5)*400+'px');s.style.animationDuration='3s';document.body.appendChild(s);setTimeout(()=>s.remove(),3000);},i*150);}}
 };
 
-// ── INIT ─────────────────────────────────────────────────────────
-// App object is ready immediately — Firebase loads in background
 App.init().catch(e=>console.error('Firebase init failed:',e));
 
-// ── TRAIL ─────────────────────────────────────────────────────────
-const trailC=document.getElementById('trailC'); let lt=0;
+const trailC=document.getElementById('trailC');let lt=0;
 document.addEventListener('mousemove',e=>{const n=Date.now();if(n-lt<60)return;lt=n;const d=document.createElement('div');d.className='trail-dot';d.style.left=e.clientX-3+'px';d.style.top=e.clientY-3+'px';trailC.appendChild(d);setTimeout(()=>d.remove(),2000);});
-
-// ── AMBIENT SNAILS ────────────────────────────────────────────────
 function amb(){const s=document.createElement('div');s.className='amb';s.textContent='🐌';const d=8+Math.random()*12;s.style.left=Math.random()*window.innerWidth+'px';s.style.top=Math.random()*window.innerHeight+'px';s.style.setProperty('--tx',(Math.random()-.5)*300+'px');s.style.setProperty('--ty',(Math.random()-.5)*200+'px');s.style.animationDuration=d+'s';document.body.appendChild(s);setTimeout(()=>s.remove(),d*1000);}
-setInterval(amb,4000); amb();
-
-// ── SCROLL REVEAL ─────────────────────────────────────────────────
+setInterval(amb,4000);amb();
 const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('iv');});},{threshold:.15});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
-
-// ── ADMIN MODAL OVERLAY CLOSE ─────────────────────────────────────
 document.getElementById('adminModal').addEventListener('click',function(e){if(e.target===this)App.closeAdminModal();});
-
-// ── ENTER KEY SHORTCUTS ───────────────────────────────────────────
 document.getElementById('adminPwInput').addEventListener('keydown',e=>{if(e.key==='Enter')App.checkPw();});
 document.getElementById('siPass').addEventListener('keydown',e=>{if(e.key==='Enter')App.doSignIn();});
 document.getElementById('oracleInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey)App.askOracle();});
