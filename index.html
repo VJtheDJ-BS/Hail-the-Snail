@@ -49,7 +49,7 @@
     nav a.s-nav{color:var(--moss-bright);border-color:rgba(114,168,103,.3);background:rgba(74,103,65,.1)}
     nav a.c-nav{color:var(--cg)!important;border-color:rgba(255,215,0,.3)!important;background:rgba(255,215,0,.06)!important;text-shadow:0 0 8px var(--cglow)}
     nav a.o-nav{color:#c084fc!important;border-color:rgba(192,132,252,.3)!important;background:rgba(107,63,160,.08)!important;text-shadow:0 0 8px var(--og)}
-    #cNavLink,#mNavLink,#oNavLink{display:none}
+    #cNavLink,#mNavLink,#oNavLink,#postsNavLink{display:none}
     main{position:relative;z-index:5}
     .page{display:none}.page.active{display:block}
     section{max-width:860px;margin:0 auto;padding:80px 30px}
@@ -215,6 +215,16 @@
     .ctit{font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,3vw,1.6rem);color:var(--cg);text-shadow:0 0 20px var(--cglow);margin-bottom:8px}
     .csub{font-style:italic;color:var(--shell-pale);opacity:.7;margin-bottom:40px}
     .ssucc{padding:10px 16px;background:rgba(74,103,65,.2);border:1px solid var(--moss-bright);border-radius:6px;color:var(--moss-bright);font-size:.88rem;margin-top:12px;text-align:center;animation:fiUp .3s ease;display:none}
+    /* POSTS */
+    .post-card{background:rgba(255,255,255,.03);border:1px solid rgba(192,132,252,.2);border-radius:12px;padding:28px;margin-bottom:24px;position:relative;overflow:hidden;animation:fiUp .4s ease}
+    .post-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#c084fc,var(--shell-amber),#c084fc)}
+    .post-title{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);margin-bottom:8px;line-height:1.3}
+    .post-meta{font-size:.75rem;color:#c084fc;opacity:.6;font-family:'Cinzel Decorative',serif;font-size:.58rem;letter-spacing:.1em;margin-bottom:14px}
+    .post-body{font-size:1rem;color:var(--text);line-height:1.8;white-space:pre-wrap;word-break:break-word;margin-bottom:14px}
+    .post-media{width:100%;max-height:400px;object-fit:cover;border-radius:8px;margin-top:12px;display:block}
+    .post-video{width:100%;border-radius:8px;margin-top:12px;display:block}
+    .post-del{position:absolute;top:14px;right:14px;background:rgba(220,50,50,.1);border:1px solid rgba(220,50,50,.3);color:var(--red);padding:4px 10px;border-radius:4px;font-family:'Cinzel Decorative',serif;font-size:.52rem;cursor:pointer;transition:all .3s}
+    .post-del:hover{background:rgba(220,50,50,.25)}
     .amb{position:fixed;font-size:1.8rem;opacity:0;pointer-events:none;z-index:2;animation:fAcross linear forwards}
     @keyframes fAcross{0%{opacity:0;transform:translateX(0) translateY(0)}10%{opacity:.15}90%{opacity:.15}100%{opacity:0;transform:translateX(var(--tx)) translateY(var(--ty))}}
     .reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
@@ -282,7 +292,8 @@
   <a onclick="App.showPage('home')">Home</a>
   <a onclick="App.showPage('about')">About</a>
   <a onclick="App.showPage('manifesto')">Our Creed</a>
-  <a onclick="App.showPage('members')" id="mNavLink">📜 Members</a>
+  <a onclick="App.showPage('posts')" id="postsNavLink">📋 Posts</a>
+  <a onclick="App.showPage('members')" id="mNavLink">📜 Messages</a>
   <a onclick="App.showPage('oracle')" id="oNavLink" class="o-nav">🔮 Oracle</a>
   <a onclick="App.showPage('council')" id="cNavLink">⭐ High Council</a>
   <a onclick="App.showPage('auth')" id="authNavLink">Join / Sign In</a>
@@ -323,6 +334,15 @@
       <div class="feed" id="msgFeed"><div class="nomsg"><span>📜</span>No messages yet.</div></div>
     </div>
   </div>
+
+  <!-- POSTS PAGE — public, visible to all -->
+  <div class="page" id="page-posts">
+    <div class="mwrap">
+      <p class="mtitle" style="color:#c084fc;text-shadow:0 0 20px var(--og)">📋 Posts from the Order</p>
+      <p class="msub">Proclamations, announcements and sacred writings from the High Council</p>
+      <div class="feed" id="postsFeed"><div class="nomsg"><span>📋</span>No posts yet from the High Council.</div></div>
+    </div>
+  </div>
   <div class="page" id="page-oracle">
     <div class="oracle-wrap">
       <p class="oracle-title">🔮 The Great Snail Oracle</p>
@@ -348,6 +368,8 @@
     <div class="cwrap">
       <p class="ctit">⭐ High Council Chamber</p>
       <p class="csub">Restricted to members of the High Council</p>
+
+      <!-- BROADCAST MESSAGES (24hr) -->
       <div class="bcbox" style="margin-bottom:40px">
         <div class="bclbl">📢 Post a Message (lasts 24 hours)</div>
         <textarea class="bcta" id="cBcInput" placeholder="Write your message..." oninput="App.prevBC('cBcInput','cBcPrev')"></textarea>
@@ -357,8 +379,32 @@
       </div>
       <div style="font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.2em;color:var(--cg);margin-bottom:16px">RECENT MESSAGES</div>
       <div id="cPastMsgs" style="margin-bottom:40px"></div>
+
+      <!-- PERMANENT POSTS -->
+      <div class="bcbox" style="margin-bottom:40px;border-color:rgba(192,132,252,.3);background:rgba(107,63,160,.04)">
+        <div class="bclbl" style="color:#c084fc">📋 Create a Post (permanent, visible to everyone)</div>
+        <div class="fg" style="margin-bottom:12px">
+          <label style="color:#c084fc">Post Title</label>
+          <input type="text" id="postTitle" placeholder="e.g. A Sacred Proclamation from the Order"/>
+        </div>
+        <textarea class="bcta" id="postBody" style="border-color:rgba(192,132,252,.2)" placeholder="Write your post content here..."></textarea>
+        <div class="fg" style="margin-top:12px;margin-bottom:0">
+          <label style="color:#c084fc">Image or Video <span class="opt">(optional — paste a URL)</span></label>
+          <input type="text" id="postMedia" placeholder="https://... (image or video URL)"/>
+        </div>
+        <button class="btn-bc" id="postBtn" onclick="App.createPost()" style="border-color:#c084fc;color:#c084fc;background:rgba(107,63,160,.12)">
+          <span id="postBtnTxt">📋 &nbsp;Publish Post</span>
+        </button>
+        <div id="postSucc" class="ssucc">✅ Post published!</div>
+      </div>
+
+      <!-- ALL MEMBERS TABLE WITH DELETE -->
       <div style="font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.2em;color:var(--cg);margin-bottom:16px">ALL MEMBER ACCOUNTS</div>
-      <div class="twrap"><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Username</th><th>Phone</th><th>Joined</th><th>Rank</th></tr></thead><tbody id="cMembersBody"></tbody></table><p class="aempty" id="cMembersEmpty" style="display:none">No members found.</p></div>
+      <div class="twrap"><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Username</th><th>Phone</th><th>Joined</th><th>Rank</th><th>Action</th></tr></thead><tbody id="cMembersBody"></tbody></table><p class="aempty" id="cMembersEmpty" style="display:none">No members found.</p></div>
+
+      <!-- EXISTING POSTS PANEL -->
+      <div style="font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.2em;color:#c084fc;margin-top:40px;margin-bottom:16px">PUBLISHED POSTS</div>
+      <div id="cPostsList"></div>
     </div>
   </div>
   <div class="page" id="page-auth">
@@ -458,10 +504,21 @@ const App = {
   async dbPostMessage(text){const {addDoc,collection}=this._fbFns;const msg={text,ts:Date.now(),postedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})};try{await addDoc(collection(this._db,'messages'),msg);}catch(e){console.warn(e);}},
   async dbDeleteMessage(did){const {deleteDoc,doc}=this._fbFns;try{await deleteDoc(doc(this._db,'messages',did));}catch(e){}},
 
+  // Posts — permanent, public
+  async dbGetPosts(){const {getDocs,collection}=this._fbFns;try{const s=await getDocs(collection(this._db,'posts'));return s.docs.map(d=>({...d.data(),_did:d.id})).sort((a,b)=>b.ts-a.ts);}catch(e){console.warn(e);return[];}},
+  async dbAddPost(post){const {addDoc,collection}=this._fbFns;try{await addDoc(collection(this._db,'posts'),post);}catch(e){console.warn(e);}},
+  async dbDeletePost(did){const {deleteDoc,doc}=this._fbFns;try{await deleteDoc(doc(this._db,'posts',did));}catch(e){}},
+  async dbDeleteMember(uid){
+    const {deleteDoc,doc}=this._fbFns;
+    try{await deleteDoc(doc(this._db,'members',uid));}catch(e){console.warn(e);}
+  },
+
   // ── NAV ───────────────────────────────────────────────────────
   updateNav(){
     const u=this._auth?.currentUser;
     const aN=document.getElementById('authNavLink'),cN=document.getElementById('cNavLink'),mN=document.getElementById('mNavLink'),oN=document.getElementById('oNavLink');
+    // Posts tab always visible to everyone
+    document.getElementById('postsNavLink').style.display='inline-block';
     if(u&&this._profile){aN.textContent='👤 '+this._profile.username;aN.classList.add('s-nav');mN.style.display='inline-block';oN.style.display='inline-block';if(this._profile.council){cN.style.display='inline-block';cN.classList.add('c-nav');}else{cN.style.display='none';cN.classList.remove('c-nav');}}
     else{aN.textContent='Join / Sign In';aN.classList.remove('s-nav');mN.style.display='none';oN.style.display='none';cN.style.display='none';cN.classList.remove('c-nav');}
   },
@@ -476,6 +533,7 @@ const App = {
     if(name==='auth')this.refreshAuthUI();
     if(name==='members')this.loadMembersPage();
     if(name==='council')this.loadCouncilPage();
+    if(name==='posts')this.loadPostsPage();
     window.scrollTo({top:0,behavior:'smooth'});
   },
 
@@ -555,13 +613,96 @@ const App = {
   async loadMembersPage(){const feed=document.getElementById('msgFeed');feed.innerHTML='<div class="nomsg"><span>⏳</span>Loading…</div>';const msgs=await this.dbGetMessages();if(!msgs.length){feed.innerHTML='<div class="nomsg"><span>📜</span>No messages yet from the High Council.</div>';return;}feed.innerHTML=msgs.map(m=>`<div class="mcard"><div class="mcard-hdr"><span class="mcard-crown">⭐</span><span class="mcard-from">HIGH COUNCIL</span><span class="mcard-date">${this.esc(m.postedAt||'')}</span></div><div class="mcard-txt">${this.esc(m.text)}</div><div class="mcard-expires">⏳ ${this.timeLeft(m.ts)||'Expired'}</div></div>`).join('');},
 
   // ── COUNCIL PAGE ──────────────────────────────────────────────
-  async loadCouncilPage(){const members=await this.dbGetMembers();const tbody=document.getElementById('cMembersBody');tbody.innerHTML='';document.getElementById('cMembersEmpty').style.display=members.length?'none':'block';members.forEach((m,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td>${this.esc(m.email)}</td><td style="color:var(--moss-bright)">@${this.esc(m.username)}</td><td>${m.phone?this.esc(m.phone):'<span style="opacity:.3">—</span>'}</td><td style="opacity:.7;font-size:.85rem">${this.esc(m.joined)}</td><td>${m.council?'<span class="cstar">⭐</span>Council':'Member'}</td>`;tbody.appendChild(tr);});await this.loadPastMsgs('cPastMsgs');},
+  async loadCouncilPage(){
+    const members=await this.dbGetMembers();
+    const tbody=document.getElementById('cMembersBody');tbody.innerHTML='';
+    document.getElementById('cMembersEmpty').style.display=members.length?'none':'block';
+    members.forEach((m,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td>${this.esc(m.email)}</td><td style="color:var(--moss-bright)">@${this.esc(m.username)}</td><td>${m.phone?this.esc(m.phone):'<span style="opacity:.3">—</span>'}</td><td style="opacity:.7;font-size:.85rem">${this.esc(m.joined)}</td><td>${m.council?'<span class="cstar">⭐</span>Council':'Member'}</td><td><button class="btn-r" onclick="App.deleteMember('${m._did}','${this.esc(m.username)}',this)">🗑 Delete</button></td>`;
+      tbody.appendChild(tr);
+    });
+    await this.loadPastMsgs('cPastMsgs');
+    await this.loadPostsPanel('cPostsList');
+  },
+
+  async deleteMember(uid, username, btn){
+    if(!confirm(`Remove ${username} from the Order? This cannot be undone.`))return;
+    btn.disabled=true;btn.textContent='…';
+    await this.dbDeleteMember(uid);
+    await this.loadCouncilPage();
+  },
 
   // ── BROADCAST ─────────────────────────────────────────────────
   prevBC(taId,prevId){document.getElementById(prevId).textContent=document.getElementById(taId).value.trim()||'Your message will appear here...';},
   async sendBC(taId,btnId,btnTxtId,pastListId){const text=document.getElementById(taId).value.trim();if(!text)return;const btn=document.getElementById(btnId);btn.disabled=true;document.getElementById(btnTxtId).innerHTML='<span class="sp sp-g"></span>Sending…';await this.dbPostMessage(text);await new Promise(r=>setTimeout(r,700));document.getElementById(taId).value='';this.prevBC(taId,btnTxtId==='bcBtnTxt'?'bcPrev':'cBcPrev');btn.disabled=false;document.getElementById(btnTxtId).innerHTML='📢 &nbsp;Send to All Members';const s=document.getElementById('cSendSucc');if(s){s.style.display='block';setTimeout(()=>s.style.display='none',3000);}await this.loadPastMsgs(pastListId);},
   async loadPastMsgs(elId){const el=document.getElementById(elId);if(!el)return;const msgs=await this.dbGetMessages();if(!msgs.length){el.innerHTML='<p style="opacity:.4;font-style:italic;font-size:.88rem">No active messages.</p>';return;}el.innerHTML=msgs.map(m=>`<div class="pmsg"><div class="pmsg-b"><div class="pmsg-t">${this.esc(m.text)}</div><div class="pmsg-m">Sent ${this.esc(m.postedAt||'')}</div><div class="pmsg-e">⏳ ${this.timeLeft(m.ts)||'Expired'}</div></div><button class="pmsg-del" onclick="App.delMsg('${this.esc(m._did||'')}','${elId}',this)">🗑</button></div>`).join('');},
   async delMsg(did,listId,btn){if(!confirm('Delete this message?'))return;btn.disabled=true;btn.textContent='…';await this.dbDeleteMessage(did);await this.loadPastMsgs(listId);},
+
+  // ── POSTS ─────────────────────────────────────────────────────
+  async loadPostsPage(){
+    const feed=document.getElementById('postsFeed');
+    feed.innerHTML='<div class="nomsg"><span>⏳</span>Loading…</div>';
+    const posts=await this.dbGetPosts();
+    if(!posts.length){feed.innerHTML='<div class="nomsg"><span>📋</span>No posts yet from the High Council.</div>';return;}
+    feed.innerHTML=posts.map(p=>this._renderPost(p,false)).join('');
+  },
+
+  async loadPostsPanel(elId){
+    const el=document.getElementById(elId);if(!el)return;
+    const posts=await this.dbGetPosts();
+    if(!posts.length){el.innerHTML='<p style="opacity:.4;font-style:italic;font-size:.88rem">No posts yet.</p>';return;}
+    el.innerHTML=posts.map(p=>this._renderPost(p,true)).join('');
+  },
+
+  _renderPost(p, showDelete){
+    const isImg = p.media && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(p.media);
+    const isVid = p.media && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(p.media);
+    const isYT  = p.media && (p.media.includes('youtube.com') || p.media.includes('youtu.be'));
+    let mediaHtml='';
+    if(p.media){
+      if(isImg) mediaHtml=`<img class="post-media" src="${this.esc(p.media)}" alt="Post image" onerror="this.style.display='none'"/>`;
+      else if(isVid) mediaHtml=`<video class="post-video" controls src="${this.esc(p.media)}" onerror="this.style.display='none'"></video>`;
+      else if(isYT){
+        const vid=p.media.includes('youtu.be/')?p.media.split('youtu.be/')[1].split('?')[0]:new URLSearchParams(p.media.split('?')[1]).get('v');
+        mediaHtml=`<iframe class="post-media" style="height:280px" src="https://www.youtube.com/embed/${vid}" frameborder="0" allowfullscreen></iframe>`;
+      } else mediaHtml=`<a href="${this.esc(p.media)}" target="_blank" style="color:#c084fc;font-size:.9rem">🔗 View media</a>`;
+    }
+    return `<div class="post-card">
+      ${showDelete?`<button class="post-del" onclick="App.deletePost('${this.esc(p._did)}',this)">🗑 Delete</button>`:''}
+      <div class="post-title">${this.esc(p.title||'Untitled Post')}</div>
+      <div class="post-meta">⭐ HIGH COUNCIL &nbsp;·&nbsp; ${this.esc(p.postedAt||'')}</div>
+      <div class="post-body">${this.esc(p.body||'')}</div>
+      ${mediaHtml}
+    </div>`;
+  },
+
+  async createPost(){
+    const title=document.getElementById('postTitle').value.trim();
+    const body=document.getElementById('postBody').value.trim();
+    const media=document.getElementById('postMedia').value.trim();
+    if(!title&&!body){alert('Please add a title or some content.');return;}
+    const btn=document.getElementById('postBtn');btn.disabled=true;
+    document.getElementById('postBtnTxt').innerHTML='<span class="sp sp-g"></span>Publishing…';
+    const post={title,body,media:media||'',ts:Date.now(),postedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+    await this.dbAddPost(post);
+    await new Promise(r=>setTimeout(r,600));
+    document.getElementById('postTitle').value='';
+    document.getElementById('postBody').value='';
+    document.getElementById('postMedia').value='';
+    btn.disabled=false;document.getElementById('postBtnTxt').innerHTML='📋 &nbsp;Publish Post';
+    const s=document.getElementById('postSucc');if(s){s.style.display='block';setTimeout(()=>s.style.display='none',3000);}
+    await this.loadPostsPanel('cPostsList');
+  },
+
+  async deletePost(did,btn){
+    if(!confirm('Delete this post? It will be removed for everyone.'))return;
+    btn.disabled=true;btn.textContent='…';
+    await this.dbDeletePost(did);
+    await this.loadPostsPanel('cPostsList');
+    // Also refresh public posts if on that page
+    if(document.getElementById('page-posts').classList.contains('active')) await this.loadPostsPage();
+  },
 
   // ── ORACLE — 50 hand-crafted wisdom responses, always works ───
   _WISDOM:['Child of the spiral — the answer you seek is already coiled within you, like the shell upon your back. Slow your breath. The garden reveals itself only to those who stop rushing through it. Hail the Snail. 🐌','Seeker of the slow path — haste is the enemy of all that is true and beautiful. The snail does not race the hare, yet the snail sees every dewdrop on every blade of grass. Move slowly today. 🌿','Wanderer beneath the cosmic shell — the spiral is the shape of galaxies and seashells alike. You are part of something vast and ancient. Trust the turning of things. 🌀','Devoted one — your shell is your home, your armour, your identity. No force in the garden can take from you what you carry within yourself. Stand firm. Hail the Snail. 🐌','Child of the Order — patience is not the absence of desire, it is desire in its most refined form. The snail wants the whole garden, and reaches it — one unhurried step at a time. 🌱','Listener in the quiet garden — rain is not misfortune. Rain is the snail\'s greatest gift. While others hide, we emerge. Your hardship is your element. Thrive in it. 🌧️','Seeker — the trail you leave behind is your only true legacy. Make it shimmer. Make it worthy of those who follow. ✨','Child of the spiral — you arrived at this moment exactly when you were meant to. Not early. Not late. The snail\'s timing is always perfect. Trust yours. 🐌','Devoted member of the Order — carry only what matters. The snail does not hoard pebbles. Release what weighs you down and your pace will quicken without effort. 🍃','Wanderer — stillness is not laziness. The snail resting on a stone is gathering energy for the next great journey. Rest without guilt today. 🌙','Child of the shell — the ones who rush past you have already missed the whole point of the garden. Slow is not behind. Slow is sacred. 🐌','Seeker of ancient wisdom — every spiral begins at a single point and expands outward forever. Your smallest action today ripples outward into eternity. Act with intention. 🌀','Devoted one — the slug abandoned its shell and gained speed, but lost its home. Never trade your foundation for the illusion of progress. 🏠','Child of the Order — what you call a wall, the snail calls a new surface to explore. There are no dead ends. Only new directions. 🌿','Wanderer — the garden has enough for every snail. You do not need to rush to claim your portion. There is abundance for the patient. 🐌','Seeker — when the salt comes, do not freeze. Move. The snail who moves survives. The snail who stops does not. Action, however slow, defeats paralysis. 💪','Child of the spiral — the moon pulls the tides and the tides shape the shore. Great forces are shaping you right now, even if you cannot feel them. Trust the process. 🌊','Devoted member — a shell is built one layer at a time, over many seasons. So too are great lives. You are not unfinished. You are still being made. 🐚','Wanderer beneath the stars — the night is not to be feared. The snail moves most freely in darkness, guided by instinct and the moisture in the air. Trust your instincts. 🌟','Child of the Order — the spiral never goes backward. It only turns, and turns, and turns. Whatever you are moving through, you are always moving forward. 🌀','Seeker — your pace is not a flaw. Your pace is your power. The world will never convince the snail to be a rabbit. Do not let it convince you either. 🐌','Devoted one — what trail have you left today? Something shimmering should mark every place you have been. Leave people better than you found them. ✨','Child of the shell — the greatest journeys in history were made one small step at a time. Yours is no different. Begin. Continue. Arrive. 🌱','Wanderer — the dew does not fall for the ones who are already running. Slow down and receive what the morning is offering you. 🌅','Seeker of the slow path — comparison is the salt that burns. There is only your path, your shell, your garden. Look only at your own trail. 🐌','Child of the Order — patience is a form of faith. To wait with purpose is to declare that you believe something worth waiting for is coming. And it is. 🕊️','Devoted member — the spiral within the shell is a map of the universe. You carry the cosmos on your back. How could you ever be small? 🌀','Wanderer — rest is not the opposite of progress. Rest is what makes progress possible. The snail retreats into its shell and emerges stronger. 🐚','Child of the spiral — the question you are asking is not really about what you think it is about. The deeper question is whether you trust yourself. You should. 🐌','Seeker — every setback is simply the spiral turning inward before it expands outward again. You are not going backward. You are gathering. 🌀','Devoted one — the snail that doubts itself never leaves the rock. The snail that believes in itself reaches the entire garden. Believe. 🐌','Wanderer — your shell carries the echo of every ancestor who carried one before you. You are not alone. You carry a lineage of survivors. 🐚','Seeker — speak slowly. Think slowly. Decide slowly. The words and choices that last are the ones that were not rushed. 🌿','Child of the spiral — there is a time for movement and a time for stillness. Wisdom is knowing which time this is. Be still. Listen. Then move. 🌙','Devoted member — the snail leaves a trail of light wherever it goes. So do you, whether you know it or not. Someone is following your light right now. ✨','Wanderer — do not mistake the size of your step for the size of your courage. The snail makes the smallest steps and crosses the greatest distances. 🐌','Child of the shell — joy is not found at the destination. Joy is in the moisture of the soil, the warmth of the stone, the slowness of the good day. Be here. 🌱','Seeker of ancient wisdom — the Oracle sees that you are stronger than you believe. The shell you carry has never cracked. And it will not crack now. 🐚','Devoted one — when you do not know the answer, move slowly toward the question. Understanding reveals itself to those who approach without urgency. 🌀','Child of the Order — the snail does not apologise for taking up space in the garden. Neither should you. You belong here. Take your space. 🐌','Wanderer — what looks like an obstacle is often just a leaf. And even if it is a stone, the snail simply goes around it. There is always another way. 🍃','Seeker — your feelings are valid weather. Let them pass through you like rain. The garden is richer for every storm. 🌧️','Child of the spiral — the Oracle has seen many seekers pass through this garden. The ones who thrived were not the fastest. They were the most faithful. 🐌','Devoted member — you need not announce your journey. Simply make it. The trail you leave will speak for you long after you have moved on. ✨','Wanderer beneath the cosmic shell — the stars are spiral galaxies seen from afar. You live inside a spiral. You are made of spiral. The universe is on your side. 🌀','Child of the Order — do the slow thing today. The thing that cannot be rushed. The thing that requires your full unhurried presence. That is the sacred thing. 🐌','Seeker — the Oracle says: go back to the beginning. Not in defeat, but in wisdom. The spiral always returns to its centre before expanding again. 🌀','Devoted one — you have already survived everything that tried to stop you. Your shell bears the marks of every challenge. Wear them with honour. 🐚','Child of the shell — the snail carries its home wherever it goes. You too carry everything you need within you. You are already complete. Hail the Snail. 🐌','Wanderer — the Oracle\'s final wisdom for today: slow down. Everything else will follow from that single sacred act. Hail the Snail. 🌿'],
@@ -605,6 +746,8 @@ const App = {
 };
 
 App.init().catch(e=>console.error('Firebase init failed:',e));
+// Posts tab always visible — no login needed
+document.getElementById('postsNavLink').style.display='inline-block';
 
 const trailC=document.getElementById('trailC');let lt=0;
 document.addEventListener('mousemove',e=>{const n=Date.now();if(n-lt<60)return;lt=n;const d=document.createElement('div');d.className='trail-dot';d.style.left=e.clientX-3+'px';d.style.top=e.clientY-3+'px';trailC.appendChild(d);setTimeout(()=>d.remove(),2000);});
