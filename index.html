@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Hail the Snail 🐌</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Crimson+Text:ital@0;1&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet"/>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
-
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
     const firebaseConfig = {
       apiKey: "AIzaSyAsOhufiOyKl9RbIFTFNgFvBClXIgaPGKA",
       authDomain: "hail-the-snail-82757.firebaseapp.com",
@@ -18,1121 +16,1014 @@
       messagingSenderId: "1002094559718",
       appId: "1:1002094559718:web:e889c0b2e2bb3f8f451627"
     };
-
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
-
-    window._db          = db;
-    window._collection  = collection;
-    window._addDoc      = addDoc;
-    window._getDocs     = getDocs;
-    window._getDoc      = getDoc;
-    window._setDoc      = setDoc;
-    window._updateDoc   = updateDoc;
-    window._deleteDoc   = deleteDoc;
-    window._doc         = doc;
-    window._query       = query;
-    window._where       = where;
-    window._orderBy     = orderBy;
-    window._fbReady     = true;
+    window._db         = db;
+    window._collection = collection;
+    window._addDoc     = addDoc;
+    window._getDocs    = getDocs;
+    window._updateDoc  = updateDoc;
+    window._deleteDoc  = deleteDoc;
+    window._doc        = doc;
+    window._query      = query;
+    window._where      = where;
+    window._fbReady    = true;
     document.dispatchEvent(new Event('firebaseReady'));
   </script>
-
   <style>
-    :root {
-      --bg: #0d0a06;
-      --shell-gold: #c9933a;
-      --shell-amber: #e8b96a;
-      --shell-pale: #f5dda0;
-      --moss: #4a6741;
-      --moss-bright: #72a867;
-      --cream: #f2ead8;
-      --text: #e8dcc8;
-      --glow: rgba(201,147,58,0.35);
-      --red: #e55;
-      --council-gold: #ffd700;
-      --council-glow: rgba(255,215,0,0.4);
+    :root{
+      --bg:#0d0a06;--shell-gold:#c9933a;--shell-amber:#e8b96a;--shell-pale:#f5dda0;
+      --moss:#4a6741;--moss-bright:#72a867;--cream:#f2ead8;--text:#e8dcc8;
+      --glow:rgba(201,147,58,0.35);--red:#e55;--cg:#ffd700;--cglow:rgba(255,215,0,0.35);
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg); color: var(--text);
-      font-family: 'Crimson Text', Georgia, serif;
-      font-size: 18px; overflow-x: hidden;
-      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ctext y='20' font-size='20'%3E🐌%3C/text%3E%3C/svg%3E") 0 20, auto;
-    }
-    body::before {
-      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background:
-        radial-gradient(ellipse 60% 40% at 20% 80%, rgba(74,103,65,0.18) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 80% 20%, rgba(201,147,58,0.12) 0%, transparent 70%);
-    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:'Crimson Text',Georgia,serif;font-size:18px;overflow-x:hidden;
+      cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ctext y='20' font-size='20'%3E🐌%3C/text%3E%3C/svg%3E") 0 20,auto}
+    body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+      background:radial-gradient(ellipse 60% 40% at 20% 80%,rgba(74,103,65,.18) 0%,transparent 70%),
+                 radial-gradient(ellipse 50% 60% at 80% 20%,rgba(201,147,58,.12) 0%,transparent 70%)}
 
-    /* ── GREETING BANNER ── */
-    #greetingBanner {
-      display: none; position: relative; z-index: 50;
-      background: linear-gradient(135deg, rgba(74,103,65,0.25), rgba(201,147,58,0.15));
-      border-bottom: 1px solid rgba(201,147,58,0.25); overflow: hidden;
-    }
-    #greetingBanner.visible { display: block; animation: bannerSlide 0.6s cubic-bezier(0.22,1,0.36,1) forwards; }
-    @keyframes bannerSlide { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
-    .greeting-inner { max-width: 960px; margin: 0 auto; padding: 12px 30px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .greeting-left { display: flex; align-items: center; gap: 14px; }
-    .greeting-snail { font-size: 2rem; animation: greetingBob 3s ease-in-out infinite; filter: drop-shadow(0 0 8px var(--shell-gold)); }
-    @keyframes greetingBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
-    .greeting-hello { font-family: 'Cinzel Decorative', serif; font-size: clamp(0.6rem,2vw,0.8rem); color: var(--shell-amber); letter-spacing: 0.15em; }
-    .greeting-username { font-family: 'Playfair Display', serif; font-size: clamp(1rem,3vw,1.4rem); color: var(--cream); font-style: italic; }
-    .greeting-username em { color: var(--shell-amber); font-style: normal; }
-    .council-badge { display: inline-block; background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05)); border: 1px solid var(--council-gold); border-radius: 20px; padding: 2px 10px; font-size: 0.7rem; color: var(--council-gold); font-family: 'Cinzel Decorative', serif; letter-spacing: 0.1em; margin-left: 8px; text-shadow: 0 0 8px var(--council-glow); }
-    .greeting-daily { font-size: 0.85rem; color: var(--moss-bright); font-style: italic; opacity: 0.85; max-width: 400px; line-height: 1.5; }
-    .greeting-dismiss { background: none; border: none; color: var(--text); opacity: 0.35; font-size: 1.1rem; cursor: pointer; padding: 4px 8px; transition: opacity 0.2s; flex-shrink: 0; }
-    .greeting-dismiss:hover { opacity: 0.8; }
+    /* BANNERS */
+    .banner{display:none;position:relative;z-index:50;overflow:hidden}
+    .banner.visible{display:block;animation:bSlide .6s cubic-bezier(.22,1,.36,1) forwards}
+    @keyframes bSlide{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+    #greetingBanner{background:linear-gradient(135deg,rgba(74,103,65,.25),rgba(201,147,58,.15));border-bottom:1px solid rgba(201,147,58,.25)}
+    #msgBanner{background:linear-gradient(135deg,rgba(255,215,0,.07),rgba(201,147,58,.07));border-bottom:1px solid rgba(255,215,0,.2)}
+    .b-inner{max-width:960px;margin:0 auto;padding:12px 30px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .b-left{display:flex;align-items:center;gap:14px}
+    .b-snail{font-size:2rem;animation:gBob 3s ease-in-out infinite;filter:drop-shadow(0 0 8px var(--shell-gold))}
+    @keyframes gBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+    .b-hello{font-family:'Cinzel Decorative',serif;font-size:clamp(.6rem,2vw,.8rem);color:var(--shell-amber);letter-spacing:.15em}
+    .b-user{font-family:'Playfair Display',serif;font-size:clamp(1rem,3vw,1.4rem);color:var(--cream);font-style:italic}
+    .b-user em{color:var(--shell-amber);font-style:normal}
+    .cbadge{display:inline-block;background:rgba(255,215,0,.12);border:1px solid var(--cg);border-radius:20px;padding:2px 10px;font-size:.68rem;color:var(--cg);font-family:'Cinzel Decorative',serif;letter-spacing:.1em;margin-left:8px}
+    .b-daily{font-size:.85rem;color:var(--moss-bright);font-style:italic;opacity:.85;max-width:380px;line-height:1.5}
+    .b-dismiss{background:none;border:none;color:var(--text);opacity:.3;font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-left:auto;transition:opacity .2s;flex-shrink:0}
+    .b-dismiss:hover{opacity:.8}
+    .msg-icon{font-size:1.4rem;filter:drop-shadow(0 0 6px var(--cg));flex-shrink:0}
+    .msg-lbl{font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.2em;color:var(--cg);margin-bottom:3px}
+    .msg-txt{font-size:.95rem;color:var(--cream);line-height:1.6}
+    .msg-dt{font-size:.75rem;color:var(--text);opacity:.4;margin-top:2px;font-style:italic}
+    .msg-expires{font-size:.72rem;color:var(--cg);opacity:.6;margin-top:2px;font-style:italic}
 
-    /* ── COUNCIL MESSAGE BANNER ── */
-    #councilMessageBanner {
-      display: none; position: relative; z-index: 49;
-      background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(201,147,58,0.08));
-      border-bottom: 1px solid rgba(255,215,0,0.2);
-    }
-    #councilMessageBanner.visible { display: block; animation: bannerSlide 0.5s ease forwards; }
-    .council-msg-inner { max-width: 960px; margin: 0 auto; padding: 10px 30px; display: flex; align-items: flex-start; gap: 14px; }
-    .council-msg-icon { font-size: 1.4rem; flex-shrink: 0; filter: drop-shadow(0 0 6px var(--council-gold)); }
-    .council-msg-body { flex: 1; }
-    .council-msg-label { font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--council-gold); margin-bottom: 4px; }
-    .council-msg-text { font-size: 0.95rem; color: var(--cream); line-height: 1.6; }
-    .council-msg-date { font-size: 0.75rem; color: var(--text); opacity: 0.4; margin-top: 2px; font-style: italic; }
-    .council-msg-dismiss { background: none; border: none; color: var(--text); opacity: 0.3; font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: opacity 0.2s; padding: 4px; }
-    .council-msg-dismiss:hover { opacity: 0.8; }
+    /* TRAIL */
+    .trail-c{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+    .trail-dot{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--shell-amber);opacity:0;animation:tFade 2s ease-out forwards;box-shadow:0 0 6px var(--shell-gold)}
+    @keyframes tFade{0%{opacity:.6}100%{opacity:0;transform:scale(.2)}}
 
-    /* ── TRAIL ── */
-    .trail-container { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
-    .trail-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--shell-amber); opacity: 0; animation: trailFade 2s ease-out forwards; box-shadow: 0 0 6px var(--shell-gold); }
-    @keyframes trailFade { 0%{opacity:.6} 100%{opacity:0;transform:scale(0.2)} }
+    /* HEADER */
+    header{position:relative;z-index:10;text-align:center;padding:70px 20px 50px;border-bottom:1px solid rgba(201,147,58,.2)}
+    .crown{font-size:3rem;display:block;animation:flt 4s ease-in-out infinite;filter:drop-shadow(0 0 16px var(--shell-gold))}
+    @keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    .site-title{font-family:'Cinzel Decorative',serif;font-size:clamp(2.4rem,7vw,5.5rem);color:var(--shell-amber);letter-spacing:.05em;line-height:1.1;margin:16px 0 8px;text-shadow:0 0 40px var(--glow),0 2px 0 #5c3a0a;animation:tGlow 3s ease-in-out infinite alternate}
+    @keyframes tGlow{from{text-shadow:0 0 30px var(--glow),0 2px 0 #5c3a0a}to{text-shadow:0 0 70px rgba(201,147,58,.6),0 0 120px rgba(232,185,106,.2),0 2px 0 #5c3a0a}}
+    .site-sub{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(1rem,2.5vw,1.5rem);color:var(--shell-pale);opacity:.85;letter-spacing:.15em}
+    .sdiv{display:flex;align-items:center;justify-content:center;gap:16px;margin:24px auto;color:var(--shell-gold);opacity:.6;font-size:1.4rem}
+    .sdiv::before,.sdiv::after{content:'';flex:1;max-width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--shell-gold))}
+    .sdiv::after{transform:scaleX(-1)}
 
-    /* ── HEADER ── */
-    header { position: relative; z-index: 10; text-align: center; padding: 70px 20px 50px; border-bottom: 1px solid rgba(201,147,58,0.2); }
-    .crown-emoji { font-size: 3rem; display: block; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 0 16px var(--shell-gold)); }
-    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-    .site-title { font-family: 'Cinzel Decorative', serif; font-size: clamp(2.4rem,7vw,5.5rem); color: var(--shell-amber); letter-spacing: 0.05em; line-height: 1.1; margin: 16px 0 8px; text-shadow: 0 0 40px var(--glow), 0 2px 0 #5c3a0a; animation: titleGlow 3s ease-in-out infinite alternate; }
-    @keyframes titleGlow { from{text-shadow:0 0 30px var(--glow),0 2px 0 #5c3a0a} to{text-shadow:0 0 70px rgba(201,147,58,0.6),0 0 120px rgba(232,185,106,0.2),0 2px 0 #5c3a0a} }
-    .site-subtitle { font-family: 'Playfair Display', serif; font-style: italic; font-size: clamp(1rem,2.5vw,1.5rem); color: var(--shell-pale); opacity: 0.85; letter-spacing: 0.15em; }
-    .snail-divider { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 24px auto; color: var(--shell-gold); opacity: 0.6; font-size: 1.4rem; }
-    .snail-divider::before, .snail-divider::after { content: ''; flex: 1; max-width: 120px; height: 1px; background: linear-gradient(90deg, transparent, var(--shell-gold)); }
-    .snail-divider::after { transform: scaleX(-1); }
+    /* NAV */
+    nav{position:sticky;top:0;z-index:100;background:rgba(13,10,6,.93);backdrop-filter:blur(14px);border-bottom:1px solid rgba(201,147,58,.15);display:flex;justify-content:center;gap:4px;padding:8px 20px;flex-wrap:wrap}
+    nav a{color:var(--shell-pale);text-decoration:none;font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.12em;padding:7px 14px;border:1px solid transparent;border-radius:3px;transition:all .3s ease;cursor:pointer}
+    nav a:hover{color:var(--shell-amber);border-color:var(--shell-gold);background:rgba(201,147,58,.08)}
+    nav a.s-nav{color:var(--moss-bright);border-color:rgba(114,168,103,.3);background:rgba(74,103,65,.1)}
+    nav a.c-nav{color:var(--cg)!important;border-color:rgba(255,215,0,.3)!important;background:rgba(255,215,0,.06)!important;text-shadow:0 0 8px var(--cglow)}
+    #cNavLink,#mNavLink{display:none}
 
-    /* ── NAV ── */
-    nav { position: sticky; top: 0; z-index: 100; background: rgba(13,10,6,0.93); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(201,147,58,0.15); display: flex; justify-content: center; gap: 4px; padding: 8px 20px; flex-wrap: wrap; }
-    nav a { color: var(--shell-pale); text-decoration: none; font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.12em; padding: 7px 14px; border: 1px solid transparent; border-radius: 3px; transition: all 0.3s ease; cursor: pointer; }
-    nav a:hover { color: var(--shell-amber); border-color: var(--shell-gold); background: rgba(201,147,58,0.08); }
-    nav a.signed-in-nav { color: var(--moss-bright); border-color: rgba(114,168,103,0.3); background: rgba(74,103,65,0.1); }
-    nav a.council-nav { color: var(--council-gold) !important; border-color: rgba(255,215,0,0.3) !important; background: rgba(255,215,0,0.06) !important; text-shadow: 0 0 8px var(--council-glow); }
-    nav a#councilNavLink { display: none; }
-    nav a#membersNavLink { display: none; }
+    /* PAGES */
+    main{position:relative;z-index:5}
+    .page{display:none}
+    .page.active{display:block}
+    section{max-width:860px;margin:0 auto;padding:80px 30px}
+    .sbadge{font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.3em;color:var(--shell-gold);text-transform:uppercase;margin-bottom:16px;opacity:.8}
+    h2{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,3rem);color:var(--cream);margin-bottom:24px;line-height:1.2}
+    h2 em{color:var(--shell-amber);font-style:italic}
+    p{line-height:1.8;color:var(--text);opacity:.9;margin-bottom:16px}
 
-    /* ── PAGES ── */
-    main { position: relative; z-index: 5; }
-    .page { display: none; }
-    .page.active { display: block; }
-    section { max-width: 860px; margin: 0 auto; padding: 80px 30px; }
-    .section-badge { font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.3em; color: var(--shell-gold); text-transform: uppercase; margin-bottom: 16px; opacity: 0.8; }
-    h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem,4vw,3rem); color: var(--cream); margin-bottom: 24px; line-height: 1.2; }
-    h2 em { color: var(--shell-amber); font-style: italic; }
-    p { line-height: 1.8; color: var(--text); opacity: 0.9; margin-bottom: 16px; }
+    /* HERO */
+    .hero{text-align:center;padding:100px 30px 80px;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 100%,rgba(74,103,65,.15) 0%,transparent 70%)}
+    .big-snail{font-size:clamp(5rem,15vw,10rem);display:block;animation:sBob 5s ease-in-out infinite;filter:drop-shadow(0 0 30px rgba(201,147,58,.4));line-height:1;cursor:pointer;user-select:none;position:relative;z-index:2;transition:filter .2s}
+    @keyframes sBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-20px) rotate(2deg)}}
+    .hero-txt{font-family:'Playfair Display',serif;font-size:clamp(1.2rem,3vw,2rem);font-style:italic;color:var(--shell-pale);max-width:600px;margin:30px auto 0;line-height:1.6}
+    .wip{display:inline-block;margin-top:30px;padding:10px 28px;background:rgba(74,103,65,.2);border:1px solid var(--moss-bright);border-radius:40px;color:var(--moss-bright);font-size:.85rem;letter-spacing:.1em;animation:pls 2s ease-in-out infinite}
+    @keyframes pls{0%,100%{opacity:.8}50%{opacity:1;box-shadow:0 0 20px rgba(114,168,103,.3)}}
+    .click-hint{font-size:.8rem;color:var(--shell-gold);opacity:0;margin-top:10px;transition:opacity .5s;font-style:italic;display:block}
+    .click-hint.vis{opacity:.6}
 
-    /* ── HERO ── */
-    .hero { text-align: center; padding: 100px 30px 80px; position: relative; overflow: hidden; }
-    .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 50% 100%, rgba(74,103,65,0.15) 0%, transparent 70%); }
-    .big-snail { font-size: clamp(5rem,15vw,10rem); display: block; animation: snailBob 5s ease-in-out infinite; filter: drop-shadow(0 0 30px rgba(201,147,58,0.4)); line-height: 1; cursor: pointer; user-select: none; position: relative; z-index: 2; transition: filter 0.2s ease; }
-    @keyframes snailBob { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-20px) rotate(2deg)} }
-    .hero-text { font-family: 'Playfair Display', serif; font-size: clamp(1.2rem,3vw,2rem); font-style: italic; color: var(--shell-pale); max-width: 600px; margin: 30px auto 0; line-height: 1.6; }
-    .wip-badge { display: inline-block; margin-top: 30px; padding: 10px 28px; background: rgba(74,103,65,0.2); border: 1px solid var(--moss-bright); border-radius: 40px; color: var(--moss-bright); font-size: 0.85rem; letter-spacing: 0.1em; animation: pulse 2s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:.8} 50%{opacity:1;box-shadow:0 0 20px rgba(114,168,103,0.3)} }
-    .snail-click-hint { font-size: 0.8rem; color: var(--shell-gold); opacity: 0; margin-top: 10px; transition: opacity 0.5s; font-style: italic; display: block; }
-    .snail-click-hint.visible { opacity: 0.6; }
+    /* CARDS */
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;margin-top:40px}
+    .card{background:rgba(255,255,255,.03);border:1px solid rgba(201,147,58,.15);border-radius:8px;padding:32px 28px;transition:all .4s;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--shell-gold),var(--moss-bright),var(--shell-gold));transform:scaleX(0);transition:transform .4s}
+    .card:hover{transform:translateY(-6px);border-color:rgba(201,147,58,.4);background:rgba(201,147,58,.05)}
+    .card:hover::before{transform:scaleX(1)}
+    .ci{font-size:2.5rem;margin-bottom:16px;display:block}
+    .card h3{font-family:'Playfair Display',serif;color:var(--shell-amber);margin-bottom:10px;font-size:1.2rem}
+    .card p{font-size:.95rem;opacity:.8;margin:0}
 
-    /* ── CARDS ── */
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 40px; }
-    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,147,58,0.15); border-radius: 8px; padding: 32px 28px; transition: all 0.4s ease; position: relative; overflow: hidden; }
-    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--shell-gold), var(--moss-bright), var(--shell-gold)); transform: scaleX(0); transition: transform 0.4s ease; }
-    .card:hover { transform: translateY(-6px); border-color: rgba(201,147,58,0.4); background: rgba(201,147,58,0.05); }
-    .card:hover::before { transform: scaleX(1); }
-    .card-icon { font-size: 2.5rem; margin-bottom: 16px; display: block; }
-    .card h3 { font-family: 'Playfair Display', serif; color: var(--shell-amber); margin-bottom: 10px; font-size: 1.2rem; }
-    .card p { font-size: 0.95rem; opacity: 0.8; margin: 0; }
-    .sep { border: none; border-top: 1px solid rgba(201,147,58,0.12); margin: 0 30px; }
+    /* MEMBERS PAGE */
+    .mwrap{max-width:760px;margin:0 auto;padding:60px 30px}
+    .mtitle{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,3vw,1.8rem);color:var(--shell-amber);margin-bottom:8px;text-shadow:0 0 20px var(--glow)}
+    .msub{font-style:italic;color:var(--shell-pale);opacity:.7;margin-bottom:40px}
+    .feed{display:flex;flex-direction:column;gap:20px}
+    .mcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,215,0,.15);border-radius:10px;padding:24px 28px;position:relative;overflow:hidden;animation:fiUp .4s ease}
+    .mcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cg),var(--shell-amber))}
+    .mcard-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .mcard-crown{font-size:1.2rem;filter:drop-shadow(0 0 6px var(--cg))}
+    .mcard-from{font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.15em;color:var(--cg)}
+    .mcard-date{font-size:.78rem;color:var(--text);opacity:.4;margin-left:auto;font-style:italic}
+    .mcard-txt{font-size:1.05rem;line-height:1.7;color:var(--cream);margin-bottom:8px}
+    .mcard-expires{font-size:.75rem;color:var(--cg);opacity:.55;font-style:italic}
+    .nomsg{text-align:center;padding:60px 20px;color:var(--text);opacity:.4;font-style:italic}
+    .nomsg span{font-size:3rem;display:block;margin-bottom:12px}
 
-    /* ── MEMBERS PAGE ── */
-    #page-members { padding-bottom: 60px; }
-    .members-wrap { max-width: 760px; margin: 0 auto; padding: 60px 30px; }
-    .members-title { font-family: 'Cinzel Decorative', serif; font-size: clamp(1.2rem,3vw,1.8rem); color: var(--shell-amber); margin-bottom: 8px; text-shadow: 0 0 20px var(--glow); }
-    .members-sub { font-style: italic; color: var(--shell-pale); opacity: 0.7; margin-bottom: 40px; }
+    /* FORMS */
+    .fsec{max-width:560px;margin:0 auto;padding:80px 30px 100px}
+    .ftitle{font-family:'Cinzel Decorative',serif;font-size:clamp(1.3rem,3vw,2rem);color:var(--shell-amber);text-align:center;margin-bottom:8px;text-shadow:0 0 30px var(--glow)}
+    .fsubt{text-align:center;font-style:italic;color:var(--shell-pale);opacity:.7;margin-bottom:40px;font-size:1rem}
+    .fbox{background:rgba(255,255,255,.03);border:1px solid rgba(201,147,58,.2);border-radius:12px;padding:40px 36px;backdrop-filter:blur(8px);box-shadow:0 0 60px rgba(0,0,0,.4);position:relative;overflow:hidden}
+    .fbox::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--moss),var(--shell-gold),var(--moss-bright))}
+    .fg{margin-bottom:24px;position:relative}
+    label{display:block;font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.2em;color:var(--shell-gold);margin-bottom:8px;text-transform:uppercase}
+    .opt{font-family:'Crimson Text',serif;font-style:italic;color:var(--text);opacity:.5;font-size:.85rem;letter-spacing:0;text-transform:none;margin-left:6px}
+    input[type=text],input[type=email],input[type=tel],input[type=password],textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(201,147,58,.25);border-radius:6px;padding:12px 16px;color:var(--cream);font-family:'Crimson Text',serif;font-size:1rem;outline:none;transition:all .3s}
+    textarea{resize:vertical;min-height:100px}
+    input::placeholder,textarea::placeholder{color:rgba(232,220,200,.3);font-style:italic}
+    input:focus,textarea:focus{border-color:var(--shell-amber);background:rgba(201,147,58,.06);box-shadow:0 0 0 3px rgba(201,147,58,.12)}
+    input.err{border-color:#c0392b;box-shadow:0 0 0 3px rgba(192,57,43,.15)}
+    input.ok{border-color:var(--moss-bright)}
+    .ferr{color:#e74c3c;font-size:.82rem;margin-top:5px;display:none;font-style:italic}
+    .ferr.vis{display:block}
 
-    /* Messages feed */
-    .messages-feed { display: flex; flex-direction: column; gap: 20px; }
-    .message-card {
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,215,0,0.15);
-      border-radius: 10px; padding: 24px 28px; position: relative; overflow: hidden;
-      animation: fadeInUp 0.4s ease;
-    }
-    .message-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--council-gold), var(--shell-amber)); }
-    .message-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .message-card-crown { font-size: 1.2rem; filter: drop-shadow(0 0 6px var(--council-gold)); }
-    .message-card-from { font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.15em; color: var(--council-gold); }
-    .message-card-date { font-size: 0.78rem; color: var(--text); opacity: 0.4; margin-left: auto; font-style: italic; }
-    .message-card-text { font-size: 1.05rem; line-height: 1.7; color: var(--cream); }
-    .no-messages { text-align: center; padding: 60px 20px; color: var(--text); opacity: 0.4; font-style: italic; }
-    .no-messages span { font-size: 3rem; display: block; margin-bottom: 12px; }
+    /* BUTTONS */
+    .btn{width:100%;margin-top:10px;padding:16px 32px;background:linear-gradient(135deg,var(--shell-gold),#a8722a);border:none;border-radius:6px;color:#1a0e04;font-family:'Cinzel Decorative',serif;font-size:.85rem;letter-spacing:.15em;cursor:pointer;position:relative;overflow:hidden;transition:all .3s;box-shadow:0 4px 20px rgba(201,147,58,.3)}
+    .btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--shell-amber),var(--shell-gold));opacity:0;transition:opacity .3s}
+    .btn:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(201,147,58,.5)}
+    .btn:hover::before{opacity:1}
+    .btn:active{transform:translateY(0)}
+    .btn span{position:relative;z-index:1}
+    .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .btn2{width:100%;margin-top:12px;padding:12px 32px;background:transparent;border:1px solid rgba(201,147,58,.4);border-radius:6px;color:var(--shell-pale);font-family:'Cinzel Decorative',serif;font-size:.75rem;letter-spacing:.1em;cursor:pointer;transition:all .3s}
+    .btn2:hover{border-color:var(--shell-amber);color:var(--shell-amber);background:rgba(201,147,58,.06)}
+    .btn-c{background:linear-gradient(135deg,rgba(255,215,0,.2),rgba(201,147,58,.12));border:1px solid var(--cg);color:var(--cg);padding:7px 15px;border-radius:6px;font-family:'Cinzel Decorative',serif;font-size:.58rem;letter-spacing:.08em;cursor:pointer;transition:all .3s;white-space:nowrap}
+    .btn-c:hover{background:rgba(255,215,0,.18);box-shadow:0 0 12px var(--cglow)}
+    .btn-c:disabled{opacity:.5;cursor:not-allowed}
+    .btn-r{background:rgba(220,50,50,.1);border:1px solid rgba(220,50,50,.3);color:var(--red);padding:6px 13px;border-radius:6px;font-family:'Cinzel Decorative',serif;font-size:.56rem;cursor:pointer;transition:all .3s;white-space:nowrap}
+    .btn-r:hover{background:rgba(220,50,50,.25)}
+    .btn-r:disabled{opacity:.5;cursor:not-allowed}
+    .btn-bc{width:100%;margin-top:16px;padding:14px 32px;background:linear-gradient(135deg,rgba(255,215,0,.18),rgba(201,147,58,.12));border:1px solid var(--cg);border-radius:6px;color:var(--cg);font-family:'Cinzel Decorative',serif;font-size:.8rem;letter-spacing:.12em;cursor:pointer;transition:all .3s;box-shadow:0 4px 16px rgba(255,215,0,.1)}
+    .btn-bc:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(255,215,0,.22)}
+    .btn-bc:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
-    /* ── FORM SHARED ── */
-    .form-section { max-width: 560px; margin: 0 auto; padding: 80px 30px 100px; }
-    .form-title { font-family: 'Cinzel Decorative', serif; font-size: clamp(1.3rem,3vw,2rem); color: var(--shell-amber); text-align: center; margin-bottom: 8px; text-shadow: 0 0 30px var(--glow); }
-    .form-sub { text-align: center; font-style: italic; color: var(--shell-pale); opacity: 0.7; margin-bottom: 40px; font-size: 1rem; }
-    .form-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,147,58,0.2); border-radius: 12px; padding: 40px 36px; backdrop-filter: blur(8px); box-shadow: 0 0 60px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
-    .form-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--moss), var(--shell-gold), var(--moss-bright)); }
-    .form-group { margin-bottom: 24px; position: relative; }
-    label { display: block; font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--shell-gold); margin-bottom: 8px; text-transform: uppercase; }
-    label .optional { font-family: 'Crimson Text', serif; font-style: italic; color: var(--text); opacity: 0.5; font-size: 0.85rem; letter-spacing: 0; text-transform: none; margin-left: 6px; }
-    input[type="text"], input[type="email"], input[type="tel"], input[type="password"], textarea {
-      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(201,147,58,0.25); border-radius: 6px;
-      padding: 12px 16px; color: var(--cream); font-family: 'Crimson Text', serif; font-size: 1rem; outline: none; transition: all 0.3s ease;
-    }
-    textarea { resize: vertical; min-height: 100px; }
-    input::placeholder, textarea::placeholder { color: rgba(232,220,200,0.3); font-style: italic; }
-    input:focus, textarea:focus { border-color: var(--shell-amber); background: rgba(201,147,58,0.06); box-shadow: 0 0 0 3px rgba(201,147,58,0.12); }
-    input.error { border-color: #c0392b; box-shadow: 0 0 0 3px rgba(192,57,43,0.15); }
-    input.success { border-color: var(--moss-bright); }
-    .field-error { color: #e74c3c; font-size: 0.82rem; margin-top: 5px; display: none; font-style: italic; }
-    .field-error.visible { display: block; }
+    /* TABS */
+    .tabs{display:flex;margin-bottom:32px;border:1px solid rgba(201,147,58,.2);border-radius:8px;overflow:hidden}
+    .tbtn{flex:1;padding:12px;background:transparent;border:none;color:var(--shell-pale);font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.1em;cursor:pointer;transition:all .3s}
+    .tbtn.act{background:rgba(201,147,58,.15);color:var(--shell-amber)}
+    .tbtn:hover:not(.act){background:rgba(201,147,58,.06)}
 
-    /* ── BUTTONS ── */
-    .btn-main { width: 100%; margin-top: 10px; padding: 16px 32px; background: linear-gradient(135deg, var(--shell-gold), #a8722a); border: none; border-radius: 6px; color: #1a0e04; font-family: 'Cinzel Decorative', serif; font-size: 0.85rem; letter-spacing: 0.15em; cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(201,147,58,0.3); }
-    .btn-main::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, var(--shell-amber), var(--shell-gold)); opacity: 0; transition: opacity 0.3s ease; }
-    .btn-main:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(201,147,58,0.5); }
-    .btn-main:hover::before { opacity: 1; }
-    .btn-main:active { transform: translateY(0); }
-    .btn-main span { position: relative; z-index: 1; }
-    .btn-main:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .btn-secondary { width: 100%; margin-top: 12px; padding: 12px 32px; background: transparent; border: 1px solid rgba(201,147,58,0.4); border-radius: 6px; color: var(--shell-pale); font-family: 'Cinzel Decorative', serif; font-size: 0.75rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s ease; }
-    .btn-secondary:hover { border-color: var(--shell-amber); color: var(--shell-amber); background: rgba(201,147,58,0.06); }
-    .btn-council { background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(201,147,58,0.2)); border: 1px solid var(--council-gold); color: var(--council-gold); padding: 8px 18px; border-radius: 6px; font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s ease; }
-    .btn-council:hover { background: rgba(255,215,0,0.2); box-shadow: 0 0 16px var(--council-glow); transform: translateY(-2px); }
-    .btn-remove { background: rgba(220,50,50,0.1); border: 1px solid rgba(220,50,50,0.3); color: var(--red); padding: 6px 14px; border-radius: 6px; font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.3s ease; }
-    .btn-remove:hover { background: rgba(220,50,50,0.25); }
-    .btn-broadcast { width: 100%; margin-top: 10px; padding: 14px 32px; background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(201,147,58,0.2)); border: 1px solid var(--council-gold); border-radius: 6px; color: var(--council-gold); font-family: 'Cinzel Decorative', serif; font-size: 0.8rem; letter-spacing: 0.12em; cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(255,215,0,0.15); }
-    .btn-broadcast:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(255,215,0,0.3); background: rgba(255,215,0,0.2); }
-    .btn-broadcast span { position: relative; z-index: 1; }
-    .btn-broadcast:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    /* SUCCESS */
+    .succ{display:none;text-align:center;padding:40px 20px}
+    .succ.vis{display:block;animation:fiUp .6s ease}
+    .succ-snail{font-size:4rem;animation:spin1 .8s ease;display:block;margin-bottom:16px}
+    @keyframes spin1{from{transform:rotate(-180deg) scale(0)}to{transform:rotate(0) scale(1)}}
+    .succ-t{font-family:'Cinzel Decorative',serif;color:var(--shell-amber);font-size:1.4rem;margin-bottom:12px}
+    .succ-m{color:var(--cream);font-size:1rem;line-height:1.7;opacity:.85}
+    .succ-n{margin-top:20px;padding:14px 20px;background:rgba(74,103,65,.15);border:1px solid rgba(114,168,103,.3);border-radius:6px;color:var(--moss-bright);font-size:.9rem;font-style:italic}
 
-    /* ── TAB SWITCHER ── */
-    .tab-switcher { display: flex; margin-bottom: 32px; border: 1px solid rgba(201,147,58,0.2); border-radius: 8px; overflow: hidden; }
-    .tab-btn { flex: 1; padding: 12px; background: transparent; border: none; color: var(--shell-pale); font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s ease; }
-    .tab-btn.active { background: rgba(201,147,58,0.15); color: var(--shell-amber); }
-    .tab-btn:hover:not(.active) { background: rgba(201,147,58,0.06); }
+    /* PROFILE */
+    .pav{font-size:3.5rem;margin-bottom:12px;display:block;text-align:center}
+    .pname{font-family:'Cinzel Decorative',serif;color:var(--shell-amber);font-size:1.2rem;margin-bottom:6px;text-align:center}
+    .puname{color:var(--moss-bright);font-style:italic;margin-bottom:20px;font-size:1rem;text-align:center}
+    .pd{background:rgba(255,255,255,.03);border:1px solid rgba(201,147,58,.15);border-radius:6px;padding:12px 16px;margin-bottom:10px;font-size:.9rem}
+    .pd .lbl{color:var(--shell-gold);font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.15em;display:block;margin-bottom:4px}
+    .cbadge2{display:block;text-align:center;margin-bottom:16px;font-family:'Cinzel Decorative',serif;color:var(--cg);font-size:.75rem;letter-spacing:.15em;text-shadow:0 0 12px var(--cglow);padding:8px;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.2);border-radius:6px}
 
-    /* ── SUCCESS ── */
-    .success-panel { display: none; text-align: center; padding: 40px 20px; }
-    .success-panel.visible { display: block; animation: fadeInUp 0.6s ease; }
-    .success-snail { font-size: 4rem; animation: spinOnce 0.8s ease; display: block; margin-bottom: 16px; }
-    @keyframes spinOnce { from{transform:rotate(-180deg) scale(0)} to{transform:rotate(0) scale(1)} }
-    .success-title { font-family: 'Cinzel Decorative', serif; color: var(--shell-amber); font-size: 1.4rem; margin-bottom: 12px; text-shadow: 0 0 20px var(--glow); }
-    .success-message { color: var(--cream); font-size: 1rem; line-height: 1.7; opacity: 0.85; }
-    .success-note { margin-top: 20px; padding: 14px 20px; background: rgba(74,103,65,0.15); border: 1px solid rgba(114,168,103,0.3); border-radius: 6px; color: var(--moss-bright); font-size: 0.9rem; font-style: italic; }
+    /* SPINNER */
+    .sp{display:inline-block;width:18px;height:18px;border:2px solid rgba(26,14,4,.3);border-top-color:#1a0e04;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle}
+    .sp-g{border-color:rgba(255,215,0,.15);border-top-color:var(--cg)}
+    @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* ── PROFILE ── */
-    .profile-avatar { font-size: 3.5rem; margin-bottom: 12px; display: block; text-align: center; }
-    .profile-name { font-family: 'Cinzel Decorative', serif; color: var(--shell-amber); font-size: 1.2rem; margin-bottom: 6px; text-align: center; }
-    .profile-username { color: var(--moss-bright); font-style: italic; margin-bottom: 20px; font-size: 1rem; text-align: center; }
-    .profile-detail { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,147,58,0.15); border-radius: 6px; padding: 12px 16px; margin-bottom: 10px; text-align: left; font-size: 0.9rem; }
-    .profile-detail span.lbl { color: var(--shell-gold); font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.15em; display: block; margin-bottom: 4px; }
-    .council-profile-badge { display: block; text-align: center; margin-bottom: 16px; font-family: 'Cinzel Decorative', serif; color: var(--council-gold); font-size: 0.75rem; letter-spacing: 0.15em; text-shadow: 0 0 12px var(--council-glow); padding: 8px; background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.2); border-radius: 6px; }
+    /* MODAL */
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+    .modal.vis{display:flex;animation:fIn .3s ease}
+    .mbox{background:#0d0a06;border:1px solid rgba(201,147,58,.3);border-radius:16px;padding:48px 40px;max-width:460px;width:90%;position:relative;box-shadow:0 0 80px rgba(201,147,58,.15)}
+    .mbox::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#c00,var(--shell-gold),#c00);border-radius:16px 16px 0 0}
+    .mclose{position:absolute;top:16px;right:20px;background:none;border:none;color:var(--text);font-size:1.4rem;cursor:pointer;opacity:.5;transition:opacity .2s}
+    .mclose:hover{opacity:1}
+    .mtit{font-family:'Cinzel Decorative',serif;color:var(--red);font-size:1rem;text-align:center;margin-bottom:8px;letter-spacing:.1em}
+    .msub{text-align:center;font-style:italic;color:var(--text);opacity:.6;margin-bottom:28px;font-size:.9rem}
 
-    /* ── SPINNER ── */
-    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(26,14,4,0.3); border-top-color: #1a0e04; border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle; }
-    .spinner-gold { border-color: rgba(255,215,0,0.2); border-top-color: var(--council-gold); }
-    @keyframes spin { to{transform:rotate(360deg)} }
+    /* ADMIN */
+    .adm{display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:2000;overflow-y:auto;padding:30px 20px 60px}
+    .adm.vis{display:block;animation:fIn .3s ease}
+    .adm-hdr{max-width:980px;margin:0 auto 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+    .adm-tit{font-family:'Cinzel Decorative',serif;color:var(--red);font-size:1.1rem;text-shadow:0 0 20px rgba(220,50,50,.4)}
+    .adm-cls{background:rgba(220,50,50,.15);border:1px solid rgba(220,50,50,.3);color:var(--red);padding:8px 20px;border-radius:6px;font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.1em;cursor:pointer;transition:all .3s}
+    .adm-cls:hover{background:rgba(220,50,50,.3)}
+    .adm-tabs{max-width:980px;margin:0 auto 24px;display:flex;border:1px solid rgba(220,50,50,.2);border-radius:8px;overflow:hidden}
+    .atb{flex:1;padding:12px;background:transparent;border:none;color:var(--shell-pale);font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.1em;cursor:pointer;transition:all .3s}
+    .atb.act{background:rgba(220,50,50,.15);color:var(--red)}
+    .atb:hover:not(.act){background:rgba(220,50,50,.06)}
+    .adm-sec{display:none;max-width:980px;margin:0 auto}
+    .adm-sec.act{display:block}
+    .acnt{font-family:'Cinzel Decorative',serif;color:var(--moss-bright);font-size:.7rem;letter-spacing:.1em;margin-bottom:16px}
+    .anote{margin-bottom:16px;padding:10px 16px;background:rgba(74,103,65,.1);border:1px solid rgba(114,168,103,.2);border-radius:6px;font-size:.82rem;color:var(--moss-bright);font-style:italic}
+    .twrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.88rem}
+    th{font-family:'Cinzel Decorative',serif;font-size:.56rem;letter-spacing:.15em;color:var(--shell-gold);padding:10px 14px;border-bottom:1px solid rgba(201,147,58,.2);text-align:left;white-space:nowrap}
+    td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.05);color:var(--cream);vertical-align:middle}
+    tr:hover td{background:rgba(201,147,58,.04)}
+    .aempty{text-align:center;color:var(--text);opacity:.4;font-style:italic;padding:40px}
+    .cstar{color:var(--cg);margin-right:4px;filter:drop-shadow(0 0 4px var(--cg))}
 
-    /* ── MODAL ── */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
-    .modal-overlay.visible { display: flex; animation: fadeIn 0.3s ease; }
-    .modal-box { background: #0d0a06; border: 1px solid rgba(201,147,58,0.3); border-radius: 16px; padding: 48px 40px; max-width: 460px; width: 90%; position: relative; box-shadow: 0 0 80px rgba(201,147,58,0.15); }
-    .modal-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #c00, var(--shell-gold), #c00); border-radius: 16px 16px 0 0; }
-    .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: var(--text); font-size: 1.4rem; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
-    .modal-close:hover { opacity: 1; }
-    .modal-title { font-family: 'Cinzel Decorative', serif; color: var(--red); font-size: 1rem; text-align: center; margin-bottom: 8px; letter-spacing: 0.1em; }
-    .modal-sub { text-align: center; font-style: italic; color: var(--text); opacity: 0.6; margin-bottom: 28px; font-size: 0.9rem; }
+    /* BROADCAST */
+    .bcbox{background:rgba(255,215,0,.03);border:1px solid rgba(255,215,0,.15);border-radius:12px;padding:28px 32px;margin-bottom:30px;position:relative;overflow:hidden}
+    .bcbox::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--cg),var(--shell-amber))}
+    .bclbl{font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.2em;color:var(--cg);margin-bottom:16px}
+    .bcta{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,215,0,.2);border-radius:6px;padding:14px 16px;color:var(--cream);font-family:'Crimson Text',serif;font-size:1rem;outline:none;resize:vertical;min-height:100px;transition:all .3s}
+    .bcta:focus{border-color:var(--cg);box-shadow:0 0 0 3px rgba(255,215,0,.1)}
+    .bcprev{margin-top:16px;padding:16px 20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,215,0,.1);border-radius:8px}
+    .bcprev-lbl{font-family:'Cinzel Decorative',serif;font-size:.55rem;letter-spacing:.2em;color:var(--text);opacity:.4;margin-bottom:6px}
+    .bcprev-txt{font-size:.95rem;color:var(--cream);line-height:1.6;font-style:italic;opacity:.7;min-height:24px}
+    .pmsg{background:rgba(255,255,255,.02);border:1px solid rgba(255,215,0,.1);border-radius:8px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px}
+    .pmsg-b{flex:1}
+    .pmsg-t{color:var(--cream);font-size:.9rem;line-height:1.5;margin-bottom:3px;word-break:break-word}
+    .pmsg-m{font-size:.75rem;color:var(--text);opacity:.4;font-style:italic}
+    .pmsg-e{font-size:.72rem;color:var(--cg);opacity:.55;font-style:italic}
+    .pmsg-del{background:none;border:none;color:var(--red);opacity:.4;cursor:pointer;font-size:1rem;flex-shrink:0;transition:opacity .2s;padding:4px}
+    .pmsg-del:hover{opacity:1}
 
-    /* ── ADMIN PANEL ── */
-    .admin-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 2000; overflow-y: auto; padding: 30px 20px 60px; }
-    .admin-panel.visible { display: block; animation: fadeIn 0.3s ease; }
-    .admin-header { max-width: 980px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .admin-title { font-family: 'Cinzel Decorative', serif; color: var(--red); font-size: 1.1rem; text-shadow: 0 0 20px rgba(220,50,50,0.4); }
-    .admin-close-btn { background: rgba(220,50,50,0.15); border: 1px solid rgba(220,50,50,0.3); color: var(--red); padding: 8px 20px; border-radius: 6px; font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s; }
-    .admin-close-btn:hover { background: rgba(220,50,50,0.3); }
+    /* COUNCIL PAGE */
+    .cwrap{max-width:900px;margin:0 auto;padding:60px 30px}
+    .ctit{font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,3vw,1.6rem);color:var(--cg);text-shadow:0 0 20px var(--cglow);margin-bottom:8px}
+    .csub{font-style:italic;color:var(--shell-pale);opacity:.7;margin-bottom:40px}
+    .ssucc{padding:10px 16px;background:rgba(74,103,65,.2);border:1px solid var(--moss-bright);border-radius:6px;color:var(--moss-bright);font-size:.88rem;margin-top:12px;text-align:center;animation:fiUp .3s ease;display:none}
 
-    /* Admin tabs */
-    .admin-tabs { max-width: 980px; margin: 0 auto 24px; display: flex; gap: 0; border: 1px solid rgba(220,50,50,0.2); border-radius: 8px; overflow: hidden; }
-    .admin-tab { flex: 1; padding: 12px; background: transparent; border: none; color: var(--shell-pale); font-family: 'Cinzel Decorative', serif; font-size: 0.6rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.3s; }
-    .admin-tab.active { background: rgba(220,50,50,0.15); color: var(--red); }
-    .admin-tab:hover:not(.active) { background: rgba(220,50,50,0.06); }
-
-    /* Admin section */
-    .admin-section { display: none; max-width: 980px; margin: 0 auto; }
-    .admin-section.active { display: block; }
-    .admin-count { font-family: 'Cinzel Decorative', serif; color: var(--moss-bright); font-size: 0.7rem; letter-spacing: 0.1em; margin-bottom: 16px; }
-    .admin-note { margin-bottom: 16px; padding: 10px 16px; background: rgba(74,103,65,0.1); border: 1px solid rgba(114,168,103,0.2); border-radius: 6px; font-size: 0.82rem; color: var(--moss-bright); font-style: italic; }
-    .admin-table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th { font-family: 'Cinzel Decorative', serif; font-size: 0.58rem; letter-spacing: 0.15em; color: var(--shell-gold); padding: 10px 14px; border-bottom: 1px solid rgba(201,147,58,0.2); text-align: left; }
-    td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--cream); vertical-align: middle; }
-    tr:hover td { background: rgba(201,147,58,0.04); }
-    .admin-empty { text-align: center; color: var(--text); opacity: 0.4; font-style: italic; padding: 40px; }
-    .council-star { color: var(--council-gold); font-size: 1rem; margin-right: 4px; filter: drop-shadow(0 0 4px var(--council-gold)); }
-
-    /* Broadcast section */
-    .broadcast-box { background: rgba(255,215,0,0.03); border: 1px solid rgba(255,215,0,0.15); border-radius: 12px; padding: 28px 32px; margin-bottom: 30px; position: relative; overflow: hidden; }
-    .broadcast-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--council-gold), var(--shell-amber)); }
-    .broadcast-label { font-family: 'Cinzel Decorative', serif; font-size: 0.65rem; letter-spacing: 0.2em; color: var(--council-gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .broadcast-textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,215,0,0.2); border-radius: 6px; padding: 14px 16px; color: var(--cream); font-family: 'Crimson Text', serif; font-size: 1rem; outline: none; resize: vertical; min-height: 100px; transition: all 0.3s; }
-    .broadcast-textarea:focus { border-color: var(--council-gold); box-shadow: 0 0 0 3px rgba(255,215,0,0.1); }
-    .broadcast-preview { margin-top: 20px; padding: 20px 24px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,215,0,0.1); border-radius: 8px; }
-    .broadcast-preview-label { font-family: 'Cinzel Decorative', serif; font-size: 0.55rem; letter-spacing: 0.2em; color: var(--text); opacity: 0.4; margin-bottom: 8px; }
-    .broadcast-preview-text { font-size: 0.95rem; color: var(--cream); line-height: 1.6; font-style: italic; opacity: 0.7; }
-
-    /* Past messages in admin */
-    .past-msg { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,215,0,0.1); border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 12px; }
-    .past-msg-body { flex: 1; }
-    .past-msg-text { color: var(--cream); font-size: 0.9rem; line-height: 1.5; margin-bottom: 4px; }
-    .past-msg-meta { font-size: 0.75rem; color: var(--text); opacity: 0.4; font-style: italic; }
-    .past-msg-del { background: none; border: none; color: var(--red); opacity: 0.4; cursor: pointer; font-size: 1rem; flex-shrink: 0; transition: opacity 0.2s; padding: 4px; }
-    .past-msg-del:hover { opacity: 1; }
-
-    /* ── MISC ── */
-    .ambient-snail { position: fixed; font-size: 1.8rem; opacity: 0; pointer-events: none; z-index: 2; animation: floatAcross linear forwards; }
-    @keyframes floatAcross { 0%{opacity:0;transform:translateX(0) translateY(0)} 10%{opacity:0.15} 90%{opacity:0.15} 100%{opacity:0;transform:translateX(var(--tx)) translateY(var(--ty))} }
-    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
-    .reveal.in-view { opacity: 1; transform: translateY(0); }
-    footer { text-align: center; padding: 40px 20px; border-top: 1px solid rgba(201,147,58,0.1); color: var(--text); opacity: 0.4; font-size: 0.85rem; font-style: italic; position: relative; z-index: 5; }
-    @keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-
-    @media(max-width:600px) {
-      nav { gap: 3px; padding: 6px 10px; }
-      nav a { font-size: 0.55rem; padding: 6px 8px; }
-      .form-box { padding: 28px 20px; }
-      .modal-box { padding: 36px 24px; }
-      .broadcast-box { padding: 20px 18px; }
-    }
+    /* MISC */
+    .amb{position:fixed;font-size:1.8rem;opacity:0;pointer-events:none;z-index:2;animation:fAcross linear forwards}
+    @keyframes fAcross{0%{opacity:0;transform:translateX(0) translateY(0)}10%{opacity:.15}90%{opacity:.15}100%{opacity:0;transform:translateX(var(--tx)) translateY(var(--ty))}}
+    .reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+    .reveal.iv{opacity:1;transform:translateY(0)}
+    footer{text-align:center;padding:40px 20px;border-top:1px solid rgba(201,147,58,.1);color:var(--text);opacity:.4;font-size:.85rem;font-style:italic;position:relative;z-index:5}
+    @keyframes fiUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fIn{from{opacity:0}to{opacity:1}}
+    @media(max-width:600px){nav{gap:3px;padding:6px 10px}nav a{font-size:.55rem;padding:5px 8px}.fbox{padding:28px 20px}.mbox{padding:36px 24px}.bcbox{padding:20px 18px}.cwrap{padding:40px 16px}}
   </style>
 </head>
 <body>
+<div class="trail-c" id="trailC"></div>
 
-<div class="trail-container" id="trailContainer"></div>
-
-<!-- ── DAILY GREETING BANNER ── -->
-<div id="greetingBanner">
-  <div class="greeting-inner">
-    <div class="greeting-left">
-      <span class="greeting-snail">🐌</span>
+<!-- GREETING BANNER -->
+<div id="greetingBanner" class="banner">
+  <div class="b-inner">
+    <div class="b-left">
+      <span class="b-snail">🐌</span>
       <div>
-        <div class="greeting-hello" id="greetingHello"></div>
-        <div class="greeting-username" id="greetingUsername"></div>
+        <div class="b-hello" id="bHello"></div>
+        <div class="b-user" id="bUser"></div>
       </div>
     </div>
-    <div class="greeting-daily" id="greetingDaily"></div>
-    <button class="greeting-dismiss" onclick="dismissBanner('greetingBanner')" title="Dismiss">✕</button>
+    <div class="b-daily" id="bDaily"></div>
+    <button class="b-dismiss" onclick="dismissBanner('greetingBanner')">✕</button>
   </div>
 </div>
 
-<!-- ── COUNCIL MESSAGE BANNER ── -->
-<div id="councilMessageBanner">
-  <div class="council-msg-inner">
-    <span class="council-msg-icon">📜</span>
-    <div class="council-msg-body">
-      <div class="council-msg-label">⭐ MESSAGE FROM THE HIGH COUNCIL</div>
-      <div class="council-msg-text" id="councilMsgText"></div>
-      <div class="council-msg-date" id="councilMsgDate"></div>
+<!-- COUNCIL MESSAGE BANNER -->
+<div id="msgBanner" class="banner">
+  <div class="b-inner">
+    <span class="msg-icon">📜</span>
+    <div style="flex:1">
+      <div class="msg-lbl">⭐ MESSAGE FROM THE HIGH COUNCIL</div>
+      <div class="msg-txt" id="msgBannerTxt"></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div class="msg-dt" id="msgBannerDt"></div>
+        <div class="msg-expires" id="msgBannerExp"></div>
+      </div>
     </div>
-    <button class="council-msg-dismiss" onclick="dismissBanner('councilMessageBanner')" title="Dismiss">✕</button>
+    <button class="b-dismiss" onclick="dismissBanner('msgBanner')">✕</button>
   </div>
 </div>
 
-<!-- ── ADMIN PASSWORD MODAL ── -->
-<div class="modal-overlay" id="adminModal">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+<!-- ADMIN MODAL -->
+<div class="modal" id="adminModal">
+  <div class="mbox">
+    <button class="mclose" onclick="closeAdminModal()">✕</button>
     <div style="text-align:center;font-size:2.5rem;margin-bottom:16px">🔐</div>
-    <p class="modal-title">Grand Council Access</p>
-    <p class="modal-sub">Enter the sacred password to access the Council Panel</p>
-    <div class="form-group">
+    <p class="mtit">Grand Council Access</p>
+    <p class="msub">Enter the sacred password</p>
+    <div class="fg">
       <label>Secret Password</label>
-      <input type="password" id="adminPasswordInput" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkAdminPassword()"/>
-      <span class="field-error" id="adminPassErr">Wrong password. The snails are not amused.</span>
+      <input type="password" id="adminPwInput" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkPw()"/>
+      <span class="ferr" id="adminPwErr">Wrong password. The snails are not amused.</span>
     </div>
-    <button class="btn-main" onclick="checkAdminPassword()"><span>🐌 &nbsp;Enter the Council</span></button>
+    <button class="btn" onclick="checkPw()"><span>🐌 &nbsp;Enter the Council</span></button>
   </div>
 </div>
 
-<!-- ── ADMIN PANEL ── -->
-<div class="admin-panel" id="adminPanel">
-  <div class="admin-header">
-    <div class="admin-title">🔴 Grand Council Command Centre</div>
-    <button class="admin-close-btn" onclick="closeAdmin()">✕ Close</button>
+<!-- ADMIN PANEL -->
+<div class="adm" id="adminPanel">
+  <div class="adm-hdr">
+    <div class="adm-tit">🔴 Grand Council Command Centre</div>
+    <button class="adm-cls" onclick="closeAdmin()">✕ Close</button>
   </div>
-
-  <div class="admin-tabs">
-    <button class="admin-tab active" onclick="switchAdminTab('members')">📋 All Members</button>
-    <button class="admin-tab" onclick="switchAdminTab('council')">⭐ High Council</button>
-    <button class="admin-tab" onclick="switchAdminTab('broadcast')">📢 Broadcast Message</button>
+  <div class="adm-tabs">
+    <button class="atb act" id="atab-members" onclick="switchAdminTab('members')">📋 All Members</button>
+    <button class="atb" id="atab-council" onclick="switchAdminTab('council')">⭐ High Council</button>
+    <button class="atb" id="atab-broadcast" onclick="switchAdminTab('broadcast')">📢 Broadcast</button>
   </div>
 
   <!-- MEMBERS TAB -->
-  <div class="admin-section active" id="adminTab-members">
-    <div class="admin-note" id="adminNote"></div>
-    <div class="admin-count" id="adminCount"></div>
-    <div class="admin-table-wrap">
-      <table id="adminTable">
-        <thead><tr>
-          <th>#</th><th>Name</th><th>Email</th><th>Username</th><th>Phone</th><th>Joined</th><th>Rank</th><th>Action</th>
-        </tr></thead>
-        <tbody id="adminTableBody"></tbody>
-      </table>
-      <p class="admin-empty" id="adminEmpty" style="display:none">No members yet. The Order awaits its first devotee. 🐌</p>
+  <div class="adm-sec act" id="adminTab-members">
+    <div class="anote" id="adminNote"></div>
+    <div class="acnt" id="adminCount"></div>
+    <div class="twrap">
+      <table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Username</th><th>Phone</th><th>Joined</th><th>Rank</th><th>Action</th></tr></thead>
+      <tbody id="adminBody"></tbody></table>
+      <p class="aempty" id="adminEmpty" style="display:none">No members yet. 🐌</p>
     </div>
   </div>
 
   <!-- COUNCIL TAB -->
-  <div class="admin-section" id="adminTab-council">
-    <div style="margin-bottom:20px;padding:16px 20px;background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.15);border-radius:8px;font-size:0.9rem;color:var(--shell-pale);opacity:0.8;font-style:italic">
-      ⭐ &nbsp;High Council members have their own Council tab in the nav bar where they can see all accounts and post messages to members.
+  <div class="adm-sec" id="adminTab-council">
+    <div style="margin-bottom:20px;padding:14px 18px;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.15);border-radius:8px;font-size:.88rem;color:var(--shell-pale);opacity:.8;font-style:italic">
+      ⭐ Council members see a private High Council tab in the nav — they can post messages to all members and view all accounts.
     </div>
-    <div class="admin-count" id="councilCount"></div>
-    <div class="admin-table-wrap">
-      <table id="councilTable">
-        <thead><tr>
-          <th>#</th><th>Name</th><th>Username</th><th>Email</th><th>Joined Council</th><th>Action</th>
-        </tr></thead>
-        <tbody id="councilTableBody"></tbody>
-      </table>
-      <p class="admin-empty" id="councilEmpty" style="display:none">No High Council members yet. Promote someone from the Members tab!</p>
+    <div class="acnt" id="councilCount"></div>
+    <div class="twrap">
+      <table><thead><tr><th>#</th><th>Name</th><th>Username</th><th>Email</th><th>Joined Council</th><th>Action</th></tr></thead>
+      <tbody id="councilBody"></tbody></table>
+      <p class="aempty" id="councilEmpty" style="display:none">No High Council members yet. Promote someone from the Members tab!</p>
     </div>
   </div>
 
   <!-- BROADCAST TAB -->
-  <div class="admin-section" id="adminTab-broadcast">
-    <div class="broadcast-box">
-      <div class="broadcast-label">📢 &nbsp;Send a Message to All Members</div>
-      <textarea class="broadcast-textarea" id="broadcastInput" placeholder="Write your message to the Order here... (e.g. 'The Grand Council announces a new snail festival on Saturday!')" oninput="updateBroadcastPreview()"></textarea>
-      <div class="broadcast-preview">
-        <div class="broadcast-preview-label">PREVIEW — HOW MEMBERS WILL SEE IT</div>
-        <div class="broadcast-preview-text" id="broadcastPreview">Your message will appear here...</div>
-      </div>
-      <button class="btn-broadcast" id="broadcastBtn" onclick="sendBroadcast()" style="margin-top:20px">
-        <span id="broadcastBtnText">📢 &nbsp;Send to All Members</span>
+  <div class="adm-sec" id="adminTab-broadcast">
+    <div class="bcbox">
+      <div class="bclbl">📢 Send a Message to All Members (lasts 24 hours)</div>
+      <textarea class="bcta" id="bcInput" placeholder="Write your message here..." oninput="prevBC('bcInput','bcPrev')"></textarea>
+      <div class="bcprev"><div class="bcprev-lbl">PREVIEW</div><div class="bcprev-txt" id="bcPrev">Your message will appear here...</div></div>
+      <button class="btn-bc" id="bcBtn" onclick="sendBC('bcInput','bcBtn','bcBtnTxt','adminPastMsgs')">
+        <span id="bcBtnTxt">📢 &nbsp;Send to All Members</span>
       </button>
     </div>
-
-    <div style="margin-top:10px">
-      <div style="font-family:'Cinzel Decorative',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--council-gold);margin-bottom:16px">PAST MESSAGES</div>
-      <div id="pastMessagesList"></div>
-    </div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.2em;color:var(--cg);margin-bottom:16px">PAST MESSAGES (last 24hrs)</div>
+    <div id="adminPastMsgs"></div>
   </div>
 </div>
 
-<!-- ── HEADER ── -->
+<!-- HEADER -->
 <header>
-  <span class="crown-emoji">👑</span>
+  <span class="crown">👑</span>
   <h1 class="site-title">Hail the Snail</h1>
-  <p class="site-subtitle">The Most Exalted Order of the Gastropod</p>
-  <div class="snail-divider">🐌</div>
+  <p class="site-sub">The Most Exalted Order of the Gastropod</p>
+  <div class="sdiv">🐌</div>
 </header>
 
-<!-- ── NAV ── -->
+<!-- NAV -->
 <nav>
   <a onclick="showPage('home')">Home</a>
   <a onclick="showPage('about')">About</a>
   <a onclick="showPage('manifesto')">Our Creed</a>
-  <a onclick="showPage('members')" id="membersNavLink">📜 Members</a>
-  <a onclick="showPage('council')" id="councilNavLink">⭐ High Council</a>
+  <a onclick="showPage('members')" id="mNavLink">📜 Members</a>
+  <a onclick="showPage('council')" id="cNavLink">⭐ High Council</a>
   <a onclick="showPage('auth')" id="authNavLink">Join / Sign In</a>
 </nav>
 
 <main>
-
   <!-- HOME -->
   <div class="page active" id="page-home">
     <div class="hero">
       <span class="big-snail" id="bigSnail" onclick="snailClick()">🐌</span>
-      <span class="snail-click-hint" id="snailHint"></span>
-      <p class="hero-text">"Slow is not failure. Slow is <em style="color:var(--shell-amber)">sacred</em>. The snail carries its home upon its back and yields to no one."</p>
-      <span class="wip-badge">🔧 &nbsp;We are building something magnificent — slowly, as it should be&nbsp; 🔧</span>
+      <span class="click-hint" id="clickHint"></span>
+      <p class="hero-txt">"Slow is not failure. Slow is <em style="color:var(--shell-amber)">sacred</em>. The snail carries its home upon its back and yields to no one."</p>
+      <span class="wip">🔧 &nbsp;We are building something magnificent — slowly, as it should be&nbsp; 🔧</span>
     </div>
   </div>
 
   <!-- ABOUT -->
   <div class="page" id="page-about">
     <section class="reveal">
-      <p class="section-badge">§ Who We Are</p>
+      <p class="sbadge">§ Who We Are</p>
       <h2>An <em>Ancient Order</em>, Reborn</h2>
-      <p>The Organisation of the Sacred Snail has gathered since time immemorial — or at least since last Tuesday — to venerate the humble yet magnificent gastropod. We believe in the snail's wisdom: slow deliberation, carrying your home within yourself, leaving a shimmering trail wherever you go.</p>
-      <p>This website is under active, loving construction. We are working tirelessly (at a snail's pace, naturally) to bring you the full glory of snail-kind.</p>
+      <p>The Organisation of the Sacred Snail has gathered since time immemorial to venerate the humble yet magnificent gastropod. We believe in the snail's wisdom: slow deliberation, carrying your home within yourself, leaving a shimmering trail wherever you go.</p>
+      <p>This website is under active, loving construction — at a snail's pace, naturally.</p>
     </section>
   </div>
 
   <!-- MANIFESTO -->
   <div class="page" id="page-manifesto">
     <section>
-      <p class="section-badge">§ Our Sacred Creed</p>
+      <p class="sbadge">§ Our Sacred Creed</p>
       <h2>The <em>Principles</em> of the Shell</h2>
       <div class="cards">
-        <div class="card"><span class="card-icon">🐌</span><h3>Slow is Holy</h3><p>We reject the tyranny of speed. The snail takes its time, and the snail always arrives.</p></div>
-        <div class="card"><span class="card-icon">🏠</span><h3>Home is Sacred</h3><p>Your shell is yours. Carry it proudly. No force in this world can separate you from it.</p></div>
-        <div class="card"><span class="card-icon">✨</span><h3>Leave a Trail</h3><p>Wherever you go, leave something shimmering behind. A life unlived is a dry rock.</p></div>
-        <div class="card"><span class="card-icon">🌧️</span><h3>Thrive in the Rain</h3><p>While others hide from storms, the snail emerges. Hardship is our element.</p></div>
+        <div class="card"><span class="ci">🐌</span><h3>Slow is Holy</h3><p>We reject the tyranny of speed. The snail takes its time, and always arrives.</p></div>
+        <div class="card"><span class="ci">🏠</span><h3>Home is Sacred</h3><p>Your shell is yours. Carry it proudly. No force can separate you from it.</p></div>
+        <div class="card"><span class="ci">✨</span><h3>Leave a Trail</h3><p>Wherever you go, leave something shimmering. A life unlived is a dry rock.</p></div>
+        <div class="card"><span class="ci">🌧️</span><h3>Thrive in the Rain</h3><p>While others hide from storms, the snail emerges. Hardship is our element.</p></div>
       </div>
     </section>
   </div>
 
-  <!-- MEMBERS PAGE (visible to all signed-in members) -->
+  <!-- MEMBERS -->
   <div class="page" id="page-members">
-    <div class="members-wrap">
-      <p class="members-title">📜 Messages from the Order</p>
-      <p class="members-sub">Proclamations and announcements from the High Council</p>
-      <div class="messages-feed" id="messagesFeed">
-        <div class="no-messages"><span>📜</span>No messages yet from the High Council.<br/>Check back soon, devoted member.</div>
+    <div class="mwrap">
+      <p class="mtitle">📜 Messages from the Order</p>
+      <p class="msub">Proclamations from the High Council — messages last 24 hours</p>
+      <div class="feed" id="msgFeed">
+        <div class="nomsg"><span>📜</span>No messages yet from the High Council.</div>
       </div>
     </div>
   </div>
 
-  <!-- HIGH COUNCIL PAGE (only for council members) -->
+  <!-- HIGH COUNCIL -->
   <div class="page" id="page-council">
-    <div style="max-width:900px;margin:0 auto;padding:60px 30px">
-      <p style="font-family:'Cinzel Decorative',serif;font-size:clamp(1rem,3vw,1.6rem);color:var(--council-gold);text-shadow:0 0 20px var(--council-glow);margin-bottom:8px">⭐ High Council Chamber</p>
-      <p style="font-style:italic;color:var(--shell-pale);opacity:0.7;margin-bottom:40px">Restricted to members of the High Council</p>
-
-      <!-- Council broadcast -->
-      <div class="broadcast-box" style="margin-bottom:30px">
-        <div class="broadcast-label">📢 &nbsp;Post a Message to All Members</div>
-        <textarea class="broadcast-textarea" id="councilBroadcastInput" placeholder="Write your message to all members..." oninput="updateCouncilPreview()"></textarea>
-        <div class="broadcast-preview">
-          <div class="broadcast-preview-label">PREVIEW</div>
-          <div class="broadcast-preview-text" id="councilBroadcastPreview">Your message will appear here...</div>
-        </div>
-        <button class="btn-broadcast" id="councilBroadcastBtn" onclick="sendCouncilBroadcast()">
-          <span id="councilBroadcastBtnText">📢 &nbsp;Send to All Members</span>
+    <div class="cwrap">
+      <p class="ctit">⭐ High Council Chamber</p>
+      <p class="csub">Restricted to members of the High Council</p>
+      <div class="bcbox" style="margin-bottom:40px">
+        <div class="bclbl">📢 Post a Message to All Members (lasts 24 hours)</div>
+        <textarea class="bcta" id="cBcInput" placeholder="Write your message to all members..." oninput="prevBC('cBcInput','cBcPrev')"></textarea>
+        <div class="bcprev"><div class="bcprev-lbl">PREVIEW</div><div class="bcprev-txt" id="cBcPrev">Your message will appear here...</div></div>
+        <button class="btn-bc" id="cBcBtn" onclick="sendBC('cBcInput','cBcBtn','cBcBtnTxt','cPastMsgs')">
+          <span id="cBcBtnTxt">📢 &nbsp;Send to All Members</span>
         </button>
+        <div id="cSendSucc" class="ssucc">✅ Message sent to all members!</div>
       </div>
-
-      <!-- All accounts table for council -->
-      <div style="font-family:'Cinzel Decorative',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--council-gold);margin-bottom:16px">ALL MEMBER ACCOUNTS</div>
-      <div style="overflow-x:auto">
-        <table id="councilMembersTable">
-          <thead><tr>
-            <th>#</th><th>Name</th><th>Email</th><th>Username</th><th>Phone</th><th>Joined</th><th>Rank</th>
-          </tr></thead>
-          <tbody id="councilMembersBody"></tbody>
-        </table>
-        <p class="admin-empty" id="councilMembersEmpty" style="display:none">No members found.</p>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.2em;color:var(--cg);margin-bottom:16px">RECENT MESSAGES (last 24hrs)</div>
+      <div id="cPastMsgs" style="margin-bottom:40px"></div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.2em;color:var(--cg);margin-bottom:16px">ALL MEMBER ACCOUNTS</div>
+      <div class="twrap">
+        <table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Username</th><th>Phone</th><th>Joined</th><th>Rank</th></tr></thead>
+        <tbody id="cMembersBody"></tbody></table>
+        <p class="aempty" id="cMembersEmpty" style="display:none">No members found.</p>
       </div>
     </div>
   </div>
 
   <!-- AUTH -->
   <div class="page" id="page-auth">
-    <div class="form-section">
+    <div class="fsec">
       <div id="profileView" style="display:none">
-        <p class="form-title">Your Profile</p>
-        <p class="form-sub">Inducted member of the Order</p>
-        <div class="form-box" style="animation:fadeInUp 0.5s ease">
-          <span class="profile-avatar">🐌</span>
-          <div class="council-profile-badge" id="profileCouncilBadge" style="display:none">⭐ HIGH COUNCIL MEMBER ⭐</div>
-          <p class="profile-name" id="profileName"></p>
-          <p class="profile-username" id="profileUsername"></p>
-          <div class="profile-detail"><span class="lbl">Email</span><span id="profileEmail"></span></div>
-          <div class="profile-detail" id="profilePhoneRow"><span class="lbl">Phone</span><span id="profilePhone"></span></div>
-          <div class="profile-detail"><span class="lbl">Member Since</span><span id="profileDate"></span></div>
-          <div class="profile-detail"><span class="lbl">Rank</span><span id="profileRank"></span></div>
-          <button class="btn-secondary" onclick="signOut()" style="margin-top:20px">🚪 &nbsp;Sign Out</button>
+        <p class="ftitle">Your Profile</p>
+        <p class="fsubt">Inducted member of the Order</p>
+        <div class="fbox" style="animation:fiUp .5s ease">
+          <span class="pav">🐌</span>
+          <div class="cbadge2" id="pCouncilBadge" style="display:none">⭐ HIGH COUNCIL MEMBER ⭐</div>
+          <p class="pname" id="pName"></p>
+          <p class="puname" id="pUname"></p>
+          <div class="pd"><span class="lbl">Email</span><span id="pEmail"></span></div>
+          <div class="pd" id="pPhoneRow"><span class="lbl">Phone</span><span id="pPhone"></span></div>
+          <div class="pd"><span class="lbl">Member Since</span><span id="pDate"></span></div>
+          <div class="pd"><span class="lbl">Rank</span><span id="pRank"></span></div>
+          <button class="btn2" onclick="signOut()" style="margin-top:20px">🚪 &nbsp;Sign Out</button>
         </div>
       </div>
-
       <div id="authForms">
-        <p class="form-title" id="authTitle">Join the Order</p>
-        <p class="form-sub" id="authSub">Create your account to pledge allegiance</p>
-        <div class="form-box">
-          <div class="tab-switcher">
-            <button class="tab-btn active" id="tabRegister" onclick="switchTab('register')">Register</button>
-            <button class="tab-btn" id="tabSignin" onclick="switchTab('signin')">Sign In</button>
+        <p class="ftitle" id="aTitle">Join the Order</p>
+        <p class="fsubt" id="aSub">Create your account to pledge allegiance</p>
+        <div class="fbox">
+          <div class="tabs">
+            <button class="tbtn act" id="tReg" onclick="switchTab('register')">Register</button>
+            <button class="tbtn" id="tSi" onclick="switchTab('signin')">Sign In</button>
           </div>
           <!-- REGISTER -->
-          <div id="registerForm">
-            <div id="registerContent">
-              <div class="form-group"><label>Your Name <span style="color:#c0392b">*</span></label><input type="text" id="regName" placeholder="e.g. Percival Shellsworth"/><span class="field-error" id="regNameErr">Please enter your name.</span></div>
-              <div class="form-group"><label>Email Address <span style="color:#c0392b">*</span></label><input type="email" id="regEmail" placeholder="you@snailmail.org"/><span class="field-error" id="regEmailErr">Please enter a valid email.</span></div>
-              <div class="form-group"><label>Username <span style="color:#c0392b">*</span></label><input type="text" id="regUsername" placeholder="e.g. SlimeMaster3000"/><span class="field-error" id="regUsernameErr">3–20 characters, letters/numbers/_ only.</span></div>
-              <div class="form-group"><label>Phone Number <span class="optional">(optional)</span></label><input type="tel" id="regPhone" placeholder="+44 7700 900000"/><span class="field-error" id="regPhoneErr">Please enter a valid phone number.</span></div>
-              <button class="btn-main" id="regBtn" onclick="handleRegister()"><span id="regBtnText">🐌 &nbsp;Join the Order</span></button>
+          <div id="regForm">
+            <div id="regContent">
+              <div class="fg"><label>Your Name <span style="color:#c0392b">*</span></label><input type="text" id="rName" placeholder="e.g. Percival Shellsworth"/><span class="ferr" id="rNameErr">Please enter your name.</span></div>
+              <div class="fg"><label>Email <span style="color:#c0392b">*</span></label><input type="email" id="rEmail" placeholder="you@snailmail.org"/><span class="ferr" id="rEmailErr">Please enter a valid email.</span></div>
+              <div class="fg"><label>Username <span style="color:#c0392b">*</span></label><input type="text" id="rUname" placeholder="e.g. SlimeMaster3000"/><span class="ferr" id="rUnameErr">3–20 characters, letters/numbers/_ only.</span></div>
+              <div class="fg"><label>Phone <span class="opt">(optional)</span></label><input type="tel" id="rPhone" placeholder="+44 7700 900000"/><span class="ferr" id="rPhoneErr">Please enter a valid phone number.</span></div>
+              <button class="btn" id="regBtn" onclick="doRegister()"><span id="regBtnTxt">🐌 &nbsp;Join the Order</span></button>
             </div>
-            <div class="success-panel" id="regSuccess">
-              <span class="success-snail">🐌</span>
-              <p class="success-title">You Are Inducted!</p>
-              <p class="success-message">Welcome to the Most Exalted Order!<br/>Your account is saved to Firebase.</p>
-              <div class="success-note">📜 &nbsp;You can now Sign In to access the Members area.</div>
-              <button class="btn-secondary" onclick="switchTab('signin')" style="margin-top:20px">→ Sign In Now</button>
+            <div class="succ" id="regSucc">
+              <span class="succ-snail">🐌</span>
+              <p class="succ-t">You Are Inducted!</p>
+              <p class="succ-m">Welcome to the Most Exalted Order!<br/>Your account is saved.</p>
+              <div class="succ-n">📜 &nbsp;You can now Sign In to access the Members area.</div>
+              <button class="btn2" onclick="switchTab('signin')" style="margin-top:20px">→ Sign In Now</button>
             </div>
           </div>
           <!-- SIGN IN -->
-          <div id="signinForm" style="display:none">
-            <div id="signinContent">
-              <div class="form-group"><label>Email Address <span style="color:#c0392b">*</span></label><input type="email" id="siEmail" placeholder="The email you registered with"/><span class="field-error" id="siEmailErr">Please enter your email.</span></div>
-              <div class="form-group"><label>Username <span style="color:#c0392b">*</span></label><input type="text" id="siUsername" placeholder="Your username"/><span class="field-error" id="siUsernameErr">Please enter your username.</span></div>
-              <span class="field-error" id="siLoginErr" style="margin-bottom:12px;font-size:0.9rem"></span>
-              <button class="btn-main" id="siBtn" onclick="handleSignIn()"><span id="siBtnText">🐌 &nbsp;Enter the Order</span></button>
-            </div>
+          <div id="siForm" style="display:none">
+            <div class="fg"><label>Email <span style="color:#c0392b">*</span></label><input type="email" id="siEmail" placeholder="The email you registered with"/><span class="ferr" id="siEmailErr">Please enter your email.</span></div>
+            <div class="fg"><label>Username <span style="color:#c0392b">*</span></label><input type="text" id="siUname" placeholder="Your username"/><span class="ferr" id="siUnameErr">Please enter your username.</span></div>
+            <span class="ferr" id="siLoginErr" style="margin-bottom:12px;font-size:.9rem"></span>
+            <button class="btn" id="siBtn" onclick="doSignIn()"><span id="siBtnTxt">🐌 &nbsp;Enter the Order</span></button>
           </div>
         </div>
       </div>
     </div>
   </div>
-
 </main>
 
 <footer>
   🐌 &nbsp;Hail the Snail — The Most Exalted Order of the Gastropod &nbsp;🐌<br/>
-  <span style="font-size:0.75rem">© All rights reserved. This website is under loving construction.</span>
+  <span style="font-size:.75rem">© All rights reserved. This website is under loving construction.</span>
 </footer>
 
 <script>
-  // ── DAILY MESSAGES ────────────────────────────────────────────────
-  const DAILY_MESSAGES = [
-    "Today the snail reminds you: one slow step forward is still a step forward. 🐌",
-    "The snail's wisdom: your shell protects you — honour it.",
-    "On this day: leave a shimmering trail in everything you do.",
-    "Patience is not weakness, it is power.",
-    "Rain is not misfortune. Rain is your moment to emerge.",
-    "Carry only what matters. Leave the rest behind.",
-    "Slow down, and you will see everything.",
-    "Loyalty to the Order is always rewarded.",
-    "The shell is your home, and home is wherever you carry it.",
-    "The fastest creature misses all the beauty along the path.",
-    "The Order rejoices in your presence today. The snail sees you.",
-    "What trail will you leave behind today?",
-    "Stillness is not laziness — it is readiness.",
-    "May your path be moist and free of salt.",
-    "Hail thyself before all others.",
-    "Every great journey began with one unhurried step.",
-    "Your pace is perfect.",
-    "The ones who rush past miss the whole garden.",
-    "The shell holds all memories. Today, make one worth keeping.",
-    "You arrived exactly when you were meant to.",
-    "May your trail glitter in the morning sun.",
-    "The Order celebrates your steadfastness. Keep going, slowly.",
-    "A snail that doubts itself never leaves the rock.",
-    "Today is a good day to be a snail.",
-    "The garden is yours. Take your time in it.",
-    "Rest is not retreat. Rest is preparation.",
-    "Your commitment to the slow and the sacred is honoured.",
-    "No shell was built in a day. Be patient with yourself.",
-    "The snail sees your effort. Every millimetre counts.",
-    "Slowness is the rarest luxury. Treasure it."
-  ];
-  function getDailyMessage() { return DAILY_MESSAGES[(new Date().getDate()-1) % DAILY_MESSAGES.length]; }
-  function getTimeGreeting() { const h=new Date().getHours(); return h<12?'Good Morning':h<17?'Good Afternoon':h<21?'Good Evening':'Good Night'; }
+// ── CONSTANTS ──────────────────────────────────────────────────────
+const DAILY = [
+  "Today the snail reminds you: one slow step forward is still a step forward. 🐌",
+  "The snail's wisdom: your shell protects you — honour it.",
+  "Leave a shimmering trail in everything you do.",
+  "Patience is not weakness, it is power.",
+  "Rain is not misfortune. Rain is your moment to emerge.",
+  "Carry only what matters. Leave the rest behind.",
+  "Slow down, and you will see everything.",
+  "Loyalty to the Order is always rewarded.",
+  "The shell is your home wherever you carry it.",
+  "The fastest creature misses all the beauty along the path.",
+  "The Order rejoices in your presence today.",
+  "What trail will you leave behind today?",
+  "Stillness is not laziness — it is readiness.",
+  "May your path be moist and free of salt.",
+  "Hail thyself before all others.",
+  "Every great journey began with one unhurried step.",
+  "Your pace is perfect.",
+  "The ones who rush past miss the whole garden.",
+  "Today, make a memory worth keeping.",
+  "You arrived exactly when you were meant to.",
+  "May your trail glitter in the morning sun.",
+  "The Order celebrates your steadfastness. Keep going.",
+  "A snail that doubts itself never leaves the rock.",
+  "Today is a good day to be a snail.",
+  "The garden is yours. Take your time in it.",
+  "Rest is not retreat. Rest is preparation.",
+  "Your commitment to the slow and the sacred is honoured.",
+  "No shell was built in a day. Be patient with yourself.",
+  "The snail sees your effort. Every millimetre counts.",
+  "Slowness is the rarest luxury. Treasure it."
+];
+const HOUR_MS = 3600000;
+const MSG_TTL  = 24 * HOUR_MS; // 24 hours in ms
 
-  // ── LOCAL STORAGE ──────────────────────────────────────────────────
-  function getLocalMembers()  { try{return JSON.parse(localStorage.getItem('snail_members')||'[]')}catch{return[]} }
-  function saveLocalMembers(m){ localStorage.setItem('snail_members',JSON.stringify(m)) }
-  function getCurrentUser()   { try{return JSON.parse(localStorage.getItem('snail_current_user')||'null')}catch{return null} }
-  function setCurrentUser(u)  { localStorage.setItem('snail_current_user',JSON.stringify(u)) }
+function dailyMsg()   { return DAILY[(new Date().getDate()-1) % DAILY.length]; }
+function timeGreet()  { const h=new Date().getHours(); return h<12?'Good Morning':h<17?'Good Afternoon':h<21?'Good Evening':'Good Night'; }
+function timeLeft(ts) {
+  const left = MSG_TTL - (Date.now() - ts);
+  if(left<=0) return null;
+  const h = Math.floor(left/HOUR_MS);
+  const m = Math.floor((left%HOUR_MS)/60000);
+  return h>0 ? `Expires in ${h}h ${m}m` : `Expires in ${m}m`;
+}
 
-  // ── FIREBASE HELPERS ──────────────────────────────────────────────
-  const fb = () => window._fbReady && window._db;
+// ── LOCAL STORAGE ────────────────────────────────────────────────
+function getLocalMembers()  { try{return JSON.parse(localStorage.getItem('snail_members')||'[]')}catch{return[]} }
+function saveLocal(m)       { localStorage.setItem('snail_members',JSON.stringify(m)) }
+function getCurrentUser()   { try{return JSON.parse(localStorage.getItem('snail_cu')||'null')}catch{return null} }
+function setCurrentUser(u)  { localStorage.setItem('snail_cu',JSON.stringify(u)) }
+function getLocalMsgs()     { try{return JSON.parse(localStorage.getItem('snail_msgs')||'[]')}catch{return[]} }
+function saveLocalMsgs(m)   { localStorage.setItem('snail_msgs',JSON.stringify(m)) }
 
-  async function dbAddMember(member) {
-    if(fb()) { try{ await window._addDoc(window._collection(window._db,'members'),member) }catch(e){console.warn(e)} }
-    const l=getLocalMembers(); l.push(member); saveLocalMembers(l);
+// ── FIREBASE HELPERS ─────────────────────────────────────────────
+const fb = () => !!(window._fbReady && window._db);
+
+// Get ALL members — completely separate from messages
+async function dbGetMembers() {
+  if(fb()) {
+    try {
+      const snap = await window._getDocs(window._collection(window._db,'members'));
+      return snap.docs.map(d=>({...d.data(),_did:d.id}));
+    } catch(e) { console.warn('Firebase members read failed:',e); }
   }
+  return getLocalMembers();
+}
 
-  async function dbFindMember(email, username) {
-    if(fb()) {
-      try {
-        const q = window._query(window._collection(window._db,'members'),
-          window._where('email','==',email.toLowerCase()),
-          window._where('username_lower','==',username.toLowerCase()));
-        const snap = await window._getDocs(q);
-        if(!snap.empty) return snap.docs[0].data();
-      } catch(e){console.warn(e)}
-    }
-    return getLocalMembers().find(m=>m.email.toLowerCase()===email.toLowerCase()&&m.username.toLowerCase()===username.toLowerCase())||null;
-  }
-
-  async function dbEmailExists(email) {
-    if(fb()) {
-      try {
-        const snap = await window._getDocs(window._query(window._collection(window._db,'members'),window._where('email','==',email.toLowerCase())));
-        if(!snap.empty) return true;
-      } catch(e){}
-    }
-    return getLocalMembers().some(m=>m.email.toLowerCase()===email.toLowerCase());
-  }
-
-  async function dbGetAllMembers() {
-    if(fb()) {
-      try {
-        const snap = await window._getDocs(window._collection(window._db,'members'));
-        return snap.docs.map(d=>({...d.data(), _docId: d.id}));
-      } catch(e){console.warn(e)}
-    }
-    return getLocalMembers();
-  }
-
-  async function dbSetCouncil(memberId, isCouncil) {
-    if(fb()) {
-      try {
-        // Find the doc by member id field
-        const snap = await window._getDocs(window._query(window._collection(window._db,'members'),window._where('id','==',memberId)));
-        if(!snap.empty) {
-          await window._updateDoc(snap.docs[0].ref, { council: isCouncil, councilJoined: isCouncil ? new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '' });
+// Get active messages (not expired)
+async function dbGetMessages() {
+  const cutoff = Date.now() - MSG_TTL;
+  if(fb()) {
+    try {
+      const snap = await window._getDocs(window._collection(window._db,'messages'));
+      const all  = snap.docs.map(d=>({...d.data(),_did:d.id}));
+      // Auto-delete expired ones from Firebase
+      for(const m of all) {
+        if(m.ts < cutoff) {
+          try { await window._deleteDoc(window._doc(window._db,'messages',m._did)); } catch(e){}
         }
-      } catch(e){console.warn(e)}
-    }
-    // Update local
-    const l = getLocalMembers();
-    const idx = l.findIndex(m=>m.id===memberId);
-    if(idx>-1) { l[idx].council=isCouncil; saveLocalMembers(l); }
-    // Update session if it's the current user
-    const cur = getCurrentUser();
-    if(cur && cur.id===memberId) { cur.council=isCouncil; setCurrentUser(cur); }
+      }
+      return all.filter(m=>m.ts >= cutoff).sort((a,b)=>b.ts-a.ts);
+    } catch(e) { console.warn('Firebase messages read failed:',e); }
   }
+  // Local fallback — also filter expired
+  return getLocalMsgs().filter(m=>m.ts >= cutoff).sort((a,b)=>b.ts-a.ts);
+}
 
-  // ── MESSAGES (Firestore collection: 'messages') ───────────────────
-  async function dbPostMessage(text) {
-    const msg = {
-      text, postedAt: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}),
-      timestamp: Date.now()
-    };
-    if(fb()) {
-      try { const ref = await window._addDoc(window._collection(window._db,'messages'),msg); return ref.id; } catch(e){console.warn(e)}
-    }
-    // Fallback local
-    const msgs = getLocalMessages(); msgs.push({...msg, _localId: Date.now()+''}); saveLocalMessages(msgs);
+async function dbAddMember(member) {
+  if(fb()) { try{ await window._addDoc(window._collection(window._db,'members'),member) }catch(e){console.warn(e)} }
+  const l=getLocalMembers(); l.push(member); saveLocal(l);
+}
+
+async function dbEmailExists(email) {
+  if(fb()) {
+    try {
+      const snap = await window._getDocs(window._query(window._collection(window._db,'members'),window._where('email','==',email.toLowerCase())));
+      if(!snap.empty) return true;
+    } catch(e){}
   }
+  return getLocalMembers().some(m=>m.email.toLowerCase()===email.toLowerCase());
+}
 
-  async function dbGetMessages() {
-    if(fb()) {
-      try {
-        const snap = await window._getDocs(window._collection(window._db,'messages'));
-        return snap.docs.map(d=>({...d.data(),_docId:d.id})).sort((a,b)=>b.timestamp-a.timestamp);
-      } catch(e){console.warn(e)}
-    }
-    return getLocalMessages().slice().reverse();
+async function dbFindMember(email,username) {
+  if(fb()) {
+    try {
+      const snap = await window._getDocs(window._query(window._collection(window._db,'members'),
+        window._where('email','==',email.toLowerCase()),
+        window._where('ul','==',username.toLowerCase())));
+      if(!snap.empty) return snap.docs[0].data();
+    } catch(e){ console.warn(e); }
   }
+  return getLocalMembers().find(m=>m.email.toLowerCase()===email.toLowerCase()&&m.username.toLowerCase()===username.toLowerCase())||null;
+}
 
-  async function dbDeleteMessage(docId) {
-    if(fb()) {
-      try { await window._deleteDoc(window._doc(window._db,'messages',docId)); } catch(e){console.warn(e)}
-    }
+async function dbSetCouncil(memberId, isCouncil) {
+  const joined = isCouncil ? new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '';
+  if(fb()) {
+    try {
+      const snap = await window._getDocs(window._query(window._collection(window._db,'members'),window._where('id','==',memberId)));
+      if(!snap.empty) await window._updateDoc(snap.docs[0].ref,{council:isCouncil,councilJoined:joined});
+    } catch(e){ console.warn(e); }
   }
+  const l=getLocalMembers(); const i=l.findIndex(m=>m.id===memberId);
+  if(i>-1){l[i].council=isCouncil;l[i].councilJoined=joined;saveLocal(l);}
+  const cu=getCurrentUser();
+  if(cu&&cu.id===memberId){cu.council=isCouncil;setCurrentUser(cu);}
+}
 
-  function getLocalMessages()  { try{return JSON.parse(localStorage.getItem('snail_messages')||'[]')}catch{return[]} }
-  function saveLocalMessages(m){ localStorage.setItem('snail_messages',JSON.stringify(m)) }
+async function dbPostMessage(text) {
+  const msg = { text, ts: Date.now(), postedAt: new Date().toLocaleString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) };
+  if(fb()) { try{ await window._addDoc(window._collection(window._db,'messages'),msg); return; }catch(e){console.warn(e)} }
+  const l=getLocalMsgs(); l.push({...msg,_did:'local_'+Date.now()}); saveLocalMsgs(l);
+}
 
-  // ── PAGE NAV ──────────────────────────────────────────────────────
-  function showPage(name) {
-    const user = getCurrentUser();
-    if((name==='members'||name==='council') && !user) { showPage('auth'); return; }
-    if(name==='council' && (!user||!user.council)) { showPage('home'); return; }
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('page-'+name).classList.add('active');
-    if(name==='auth') checkAuthState();
-    if(name==='members') loadMembersPage();
-    if(name==='council') loadCouncilPage();
-    window.scrollTo({top:0,behavior:'smooth'});
+async function dbDeleteMessage(did) {
+  if(fb()&&!did.startsWith('local_')) { try{ await window._deleteDoc(window._doc(window._db,'messages',did)); }catch(e){} }
+  const l=getLocalMsgs(); saveLocalMsgs(l.filter(m=>m._did!==did));
+}
+
+// ── PAGE NAV ──────────────────────────────────────────────────────
+function showPage(name) {
+  const user=getCurrentUser();
+  if((name==='members'||name==='council')&&!user){showPage('auth');return;}
+  if(name==='council'&&(!user||!user.council)){showPage('home');return;}
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(name==='auth') refreshAuthState();
+  if(name==='members') loadMembersPage();
+  if(name==='council') loadCouncilPage();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── BANNERS ───────────────────────────────────────────────────────
+function showGreeting(user) {
+  document.getElementById('bHello').textContent = timeGreet()+',';
+  const cb = user.council ? '<span class="cbadge">⭐ HIGH COUNCIL</span>' : '';
+  document.getElementById('bUser').innerHTML = '<em>'+esc(user.username)+'</em> — welcome back'+cb;
+  document.getElementById('bDaily').textContent = dailyMsg();
+  const b=document.getElementById('greetingBanner');
+  b.style.cssText=''; b.classList.add('visible');
+}
+
+async function maybeShowMsgBanner() {
+  const msgs = await dbGetMessages();
+  if(!msgs.length) return;
+  const m = msgs[0];
+  document.getElementById('msgBannerTxt').textContent = m.text;
+  document.getElementById('msgBannerDt').textContent  = 'Posted '+m.postedAt;
+  const tl = timeLeft(m.ts);
+  document.getElementById('msgBannerExp').textContent = tl || '';
+  const b=document.getElementById('msgBanner');
+  b.style.cssText=''; b.classList.add('visible');
+}
+
+function dismissBanner(id) {
+  const b=document.getElementById(id);
+  b.style.transition='all .4s ease'; b.style.maxHeight=b.offsetHeight+'px';
+  requestAnimationFrame(()=>{b.style.maxHeight='0';b.style.opacity='0';});
+  setTimeout(()=>b.style.display='none',400);
+}
+
+// ── AUTH STATE ────────────────────────────────────────────────────
+function refreshAuthState() {
+  const user=getCurrentUser();
+  const aN=document.getElementById('authNavLink');
+  const cN=document.getElementById('cNavLink');
+  const mN=document.getElementById('mNavLink');
+  if(user) {
+    document.getElementById('authForms').style.display='none';
+    document.getElementById('profileView').style.display='block';
+    document.getElementById('pName').textContent=user.name;
+    document.getElementById('pUname').textContent='@'+user.username;
+    document.getElementById('pEmail').textContent=user.email;
+    document.getElementById('pDate').textContent=user.joined;
+    document.getElementById('pRank').textContent=user.council?'⭐ High Council Member':'Member of the Order';
+    if(user.phone){document.getElementById('pPhone').textContent=user.phone;document.getElementById('pPhoneRow').style.display='block';}
+    else document.getElementById('pPhoneRow').style.display='none';
+    document.getElementById('pCouncilBadge').style.display=user.council?'block':'none';
+    aN.textContent='👤 '+user.username; aN.classList.add('s-nav');
+    mN.style.display='inline-block';
+    if(user.council){cN.style.display='inline-block';cN.classList.add('c-nav');}
+    else{cN.style.display='none';cN.classList.remove('c-nav');}
+  } else {
+    document.getElementById('authForms').style.display='block';
+    document.getElementById('profileView').style.display='none';
+    aN.textContent='Join / Sign In'; aN.classList.remove('s-nav');
+    mN.style.display='none'; cN.style.display='none'; cN.classList.remove('c-nav');
   }
+}
 
-  // ── BANNERS ───────────────────────────────────────────────────────
-  function showGreeting(user) {
-    document.getElementById('greetingHello').textContent = getTimeGreeting()+',';
-    const councilBit = user.council ? '<span class="council-badge">⭐ HIGH COUNCIL</span>' : '';
-    document.getElementById('greetingUsername').innerHTML = '<em>'+escHtml(user.username)+'</em> — welcome back'+councilBit;
-    document.getElementById('greetingDaily').textContent = getDailyMessage();
-    const b = document.getElementById('greetingBanner');
-    b.style.cssText=''; b.classList.add('visible');
+function signOut() {
+  localStorage.removeItem('snail_cu');
+  ['greetingBanner','msgBanner'].forEach(id=>{
+    const b=document.getElementById(id);b.style.display='none';b.classList.remove('visible');
+  });
+  refreshAuthState(); showPage('home');
+}
+
+// ── TAB SWITCHER ──────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('regForm').style.display=tab==='register'?'block':'none';
+  document.getElementById('siForm').style.display=tab==='signin'?'block':'none';
+  document.getElementById('tReg').classList.toggle('act',tab==='register');
+  document.getElementById('tSi').classList.toggle('act',tab==='signin');
+  document.getElementById('aTitle').textContent=tab==='register'?'Join the Order':'Return to the Order';
+  document.getElementById('aSub').textContent=tab==='register'?'Create your account to pledge allegiance':'Sign in with your registered details';
+}
+
+// ── VALIDATION ────────────────────────────────────────────────────
+function sErr(id,eid,msg){const e=document.getElementById(id);e.classList.add('err');e.classList.remove('ok');const er=document.getElementById(eid);if(msg)er.textContent=msg;er.classList.add('vis');}
+function cErr(id,eid){const e=document.getElementById(id);e.classList.remove('err');e.classList.add('ok');document.getElementById(eid).classList.remove('vis');}
+
+// ── REGISTER ─────────────────────────────────────────────────────
+async function doRegister() {
+  let ok=true;
+  const name=document.getElementById('rName').value.trim();
+  const email=document.getElementById('rEmail').value.trim();
+  const uname=document.getElementById('rUname').value.trim();
+  const phone=document.getElementById('rPhone').value.trim();
+  if(!name){sErr('rName','rNameErr');ok=false;}else cErr('rName','rNameErr');
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){sErr('rEmail','rEmailErr');ok=false;}else cErr('rEmail','rEmailErr');
+  if(!uname||!/^[a-zA-Z0-9_]{3,20}$/.test(uname)){sErr('rUname','rUnameErr');ok=false;}else cErr('rUname','rUnameErr');
+  if(phone&&!/^[\+\d\s\-\(\)]{7,20}$/.test(phone)){sErr('rPhone','rPhoneErr');ok=false;}else document.getElementById('rPhone').classList.remove('err');
+  if(!ok) return;
+  const btn=document.getElementById('regBtn'); btn.disabled=true;
+  document.getElementById('regBtnTxt').innerHTML='<span class="sp"></span>Checking…';
+  if(await dbEmailExists(email)){
+    btn.disabled=false; document.getElementById('regBtnTxt').innerHTML='🐌 &nbsp;Join the Order';
+    sErr('rEmail','rEmailErr','This email is already registered.'); return;
   }
+  document.getElementById('rEmailErr').textContent='Please enter a valid email.';
+  document.getElementById('regBtnTxt').innerHTML='<span class="sp"></span>Initiating the Sacred Rites…';
+  const joined=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const member={name,email:email.toLowerCase(),username:uname,ul:uname.toLowerCase(),phone:phone||'',joined,id:Date.now(),council:false,councilJoined:''};
+  await dbAddMember(member);
+  try{await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_key:'fac89c06-5a42-4a33-805e-2c8528ed1ade',subject:'🐌 New Member: '+uname,from_name:'Hail the Snail',message:'Name: '+name+'\nEmail: '+email+'\nUsername: '+uname+'\nPhone: '+(phone||'N/A')+'\nJoined: '+joined})});}catch(e){}
+  await new Promise(r=>setTimeout(r,700));
+  btn.disabled=false; document.getElementById('regBtnTxt').innerHTML='🐌 &nbsp;Join the Order';
+  document.getElementById('regContent').style.display='none';
+  document.getElementById('regSucc').classList.add('vis');
+  confetti();
+}
 
-  async function showCouncilMessage() {
-    const msgs = await dbGetMessages();
-    if(!msgs.length) return;
-    const latest = msgs[0];
-    document.getElementById('councilMsgText').textContent = latest.text;
-    document.getElementById('councilMsgDate').textContent = 'Posted '+latest.postedAt;
-    const b = document.getElementById('councilMessageBanner');
-    b.style.cssText=''; b.classList.add('visible');
-  }
+// ── SIGN IN ───────────────────────────────────────────────────────
+async function doSignIn() {
+  const email=document.getElementById('siEmail').value.trim();
+  const uname=document.getElementById('siUname').value.trim();
+  let ok=true;
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){sErr('siEmail','siEmailErr');ok=false;}else cErr('siEmail','siEmailErr');
+  if(!uname){sErr('siUname','siUnameErr');ok=false;}else cErr('siUname','siUnameErr');
+  if(!ok) return;
+  const btn=document.getElementById('siBtn'); btn.disabled=true;
+  document.getElementById('siBtnTxt').innerHTML='<span class="sp"></span>Verifying allegiance…';
+  const member=await dbFindMember(email,uname);
+  btn.disabled=false; document.getElementById('siBtnTxt').innerHTML='🐌 &nbsp;Enter the Order';
+  const errEl=document.getElementById('siLoginErr');
+  if(!member){errEl.textContent='❌ No account found. Check your email and username.';errEl.classList.add('vis');return;}
+  errEl.classList.remove('vis');
+  setCurrentUser(member); refreshAuthState(); confetti();
+  showGreeting(member);
+  setTimeout(async()=>{const msgs=await dbGetMessages();if(msgs.length)maybeShowMsgBanner();},800);
+  setTimeout(()=>showPage('home'),500);
+}
 
-  function dismissBanner(id) {
-    const b = document.getElementById(id);
-    b.style.transition='all 0.4s ease';
-    b.style.maxHeight=b.offsetHeight+'px';
-    requestAnimationFrame(()=>{b.style.maxHeight='0';b.style.opacity='0';});
-    setTimeout(()=>b.style.display='none',400);
-  }
-
-  // ── AUTH STATE ────────────────────────────────────────────────────
-  function checkAuthState() {
-    const user = getCurrentUser();
-    const authNav = document.getElementById('authNavLink');
-    const councilNav = document.getElementById('councilNavLink');
-    const membersNav = document.getElementById('membersNavLink');
-
-    if(user) {
-      document.getElementById('authForms').style.display='none';
-      document.getElementById('profileView').style.display='block';
-      document.getElementById('profileName').textContent=user.name;
-      document.getElementById('profileUsername').textContent='@'+user.username;
-      document.getElementById('profileEmail').textContent=user.email;
-      document.getElementById('profileDate').textContent=user.joined;
-      document.getElementById('profileRank').textContent=user.council?'⭐ High Council Member':'Member of the Order';
-      if(user.phone){document.getElementById('profilePhone').textContent=user.phone;document.getElementById('profilePhoneRow').style.display='block';}
-      else document.getElementById('profilePhoneRow').style.display='none';
-      document.getElementById('profileCouncilBadge').style.display=user.council?'block':'none';
-      authNav.textContent='👤 '+user.username;
-      authNav.classList.add('signed-in-nav');
-      membersNav.style.display='inline-block';
-      councilNav.style.display = user.council ? 'inline-block' : 'none';
-      if(user.council) councilNav.classList.add('council-nav');
-    } else {
-      document.getElementById('authForms').style.display='block';
-      document.getElementById('profileView').style.display='none';
-      authNav.textContent='Join / Sign In';
-      authNav.classList.remove('signed-in-nav');
-      membersNav.style.display='none';
-      councilNav.style.display='none';
-    }
-  }
-
-  function signOut() {
-    localStorage.removeItem('snail_current_user');
-    dismissBanner('greetingBanner');
-    dismissBanner('councilMessageBanner');
-    checkAuthState();
-    showPage('home');
-  }
-
-  // ── TAB SWITCHER ──────────────────────────────────────────────────
-  function switchTab(tab) {
-    document.getElementById('registerForm').style.display=tab==='register'?'block':'none';
-    document.getElementById('signinForm').style.display=tab==='signin'?'block':'none';
-    document.getElementById('tabRegister').classList.toggle('active',tab==='register');
-    document.getElementById('tabSignin').classList.toggle('active',tab==='signin');
-    document.getElementById('authTitle').textContent=tab==='register'?'Join the Order':'Return to the Order';
-    document.getElementById('authSub').textContent=tab==='register'?'Create your account to pledge allegiance':'Sign in with your registered details';
-  }
-
-  // ── VALIDATION ────────────────────────────────────────────────────
-  function showErr(id,errId,msg){const e=document.getElementById(id);e.classList.add('error');e.classList.remove('success');const err=document.getElementById(errId);if(msg)err.textContent=msg;err.classList.add('visible');}
-  function clearErr(id,errId){const e=document.getElementById(id);e.classList.remove('error');e.classList.add('success');document.getElementById(errId).classList.remove('visible');}
-
-  // ── REGISTER ──────────────────────────────────────────────────────
-  async function handleRegister() {
-    let ok=true;
-    const name=document.getElementById('regName').value.trim();
-    const email=document.getElementById('regEmail').value.trim();
-    const username=document.getElementById('regUsername').value.trim();
-    const phone=document.getElementById('regPhone').value.trim();
-    if(!name){showErr('regName','regNameErr');ok=false;}else clearErr('regName','regNameErr');
-    if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showErr('regEmail','regEmailErr');ok=false;}else clearErr('regEmail','regEmailErr');
-    if(!username||!/^[a-zA-Z0-9_]{3,20}$/.test(username)){showErr('regUsername','regUsernameErr');ok=false;}else clearErr('regUsername','regUsernameErr');
-    if(phone&&!/^[\+\d\s\-\(\)]{7,20}$/.test(phone)){showErr('regPhone','regPhoneErr');ok=false;}else document.getElementById('regPhone').classList.remove('error');
-    if(!ok) return;
-    const btn=document.getElementById('regBtn'); btn.disabled=true;
-    document.getElementById('regBtnText').innerHTML='<span class="spinner"></span>Checking the scrolls…';
-    const exists=await dbEmailExists(email);
-    if(exists){btn.disabled=false;document.getElementById('regBtnText').innerHTML='🐌 &nbsp;Join the Order';showErr('regEmail','regEmailErr','This email is already registered.');return;}
-    document.getElementById('regEmailErr').textContent='Please enter a valid email.';
-    document.getElementById('regBtnText').innerHTML='<span class="spinner"></span>Initiating the Sacred Rites…';
-    const joined=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-    const member={name,email:email.toLowerCase(),username,username_lower:username.toLowerCase(),phone:phone||'',joined,id:Date.now(),council:false,councilJoined:''};
-    await dbAddMember(member);
-    try{await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_key:'fac89c06-5a42-4a33-805e-2c8528ed1ade',subject:'🐌 New Member: '+username,from_name:'Hail the Snail',message:'New member!\n\nName: '+name+'\nEmail: '+email+'\nUsername: '+username+'\nPhone: '+(phone||'Not provided')+'\nJoined: '+joined})});}catch(e){}
-    await new Promise(r=>setTimeout(r,800));
-    btn.disabled=false;
-    document.getElementById('regBtnText').innerHTML='🐌 &nbsp;Join the Order';
-    document.getElementById('registerContent').style.display='none';
-    document.getElementById('regSuccess').classList.add('visible');
-    launchConfettiSnails();
-  }
-
-  // ── SIGN IN ───────────────────────────────────────────────────────
-  async function handleSignIn() {
-    const email=document.getElementById('siEmail').value.trim();
-    const username=document.getElementById('siUsername').value.trim();
-    let ok=true;
-    if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showErr('siEmail','siEmailErr');ok=false;}else clearErr('siEmail','siEmailErr');
-    if(!username){showErr('siUsername','siUsernameErr');ok=false;}else clearErr('siUsername','siUsernameErr');
-    if(!ok) return;
-    const btn=document.getElementById('siBtn'); btn.disabled=true;
-    document.getElementById('siBtnText').innerHTML='<span class="spinner"></span>Verifying allegiance…';
-    const member=await dbFindMember(email,username);
-    btn.disabled=false;
-    document.getElementById('siBtnText').innerHTML='🐌 &nbsp;Enter the Order';
-    const errEl=document.getElementById('siLoginErr');
-    if(!member){errEl.textContent='❌ No account found. Check your email and username.';errEl.classList.add('visible');return;}
-    errEl.classList.remove('visible');
-    setCurrentUser(member);
-    checkAuthState();
-    launchConfettiSnails();
-    showGreeting(member);
-    // Show latest council message if any
-    setTimeout(async()=>{
-      const msgs=await dbGetMessages();
-      if(msgs.length) showCouncilMessage();
-    },800);
-    setTimeout(()=>showPage('home'),500);
-  }
-
-  // ── MEMBERS PAGE ──────────────────────────────────────────────────
-  async function loadMembersPage() {
-    const feed = document.getElementById('messagesFeed');
-    feed.innerHTML = '<div class="no-messages"><span>⏳</span>Loading messages...</div>';
-    const msgs = await dbGetMessages();
-    if(!msgs.length){feed.innerHTML='<div class="no-messages"><span>📜</span>No messages yet from the High Council.<br/>Check back soon, devoted member.</div>';return;}
-    feed.innerHTML = msgs.map(m=>`
-      <div class="message-card">
-        <div class="message-card-header">
-          <span class="message-card-crown">⭐</span>
-          <span class="message-card-from">HIGH COUNCIL</span>
-          <span class="message-card-date">${escHtml(m.postedAt||'')}</span>
-        </div>
-        <div class="message-card-text">${escHtml(m.text)}</div>
+// ── MEMBERS PAGE ──────────────────────────────────────────────────
+async function loadMembersPage() {
+  const feed=document.getElementById('msgFeed');
+  feed.innerHTML='<div class="nomsg"><span>⏳</span>Loading…</div>';
+  const msgs = await dbGetMessages();
+  if(!msgs.length){feed.innerHTML='<div class="nomsg"><span>📜</span>No messages yet from the High Council.</div>';return;}
+  feed.innerHTML=msgs.map(m=>{
+    const tl=timeLeft(m.ts)||'Expired';
+    return `<div class="mcard">
+      <div class="mcard-hdr">
+        <span class="mcard-crown">⭐</span>
+        <span class="mcard-from">HIGH COUNCIL</span>
+        <span class="mcard-date">${esc(m.postedAt||'')}</span>
       </div>
-    `).join('');
-  }
+      <div class="mcard-txt">${esc(m.text)}</div>
+      <div class="mcard-expires">⏳ ${tl}</div>
+    </div>`;
+  }).join('');
+}
 
-  // ── COUNCIL PAGE ──────────────────────────────────────────────────
-  async function loadCouncilPage() {
-    const members = await dbGetAllMembers();
-    const tbody = document.getElementById('councilMembersBody');
-    tbody.innerHTML='';
-    document.getElementById('councilMembersEmpty').style.display=members.length?'none':'block';
+// ── COUNCIL PAGE ──────────────────────────────────────────────────
+async function loadCouncilPage() {
+  // Load members table — completely independent fetch
+  const members = await dbGetMembers();
+  const tbody=document.getElementById('cMembersBody');
+  tbody.innerHTML='';
+  document.getElementById('cMembersEmpty').style.display=members.length?'none':'block';
+  members.forEach((m,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${esc(m.name)}</strong></td><td>${esc(m.email)}</td>
+      <td style="color:var(--moss-bright)">@${esc(m.username)}</td>
+      <td>${m.phone?esc(m.phone):'<span style="opacity:.3">—</span>'}</td>
+      <td style="opacity:.7;font-size:.85rem">${esc(m.joined)}</td>
+      <td>${m.council?'<span class="cstar">⭐</span>Council':'Member'}</td>`;
+    tbody.appendChild(tr);
+  });
+  // Load past messages for council view
+  await loadPastMsgs('cPastMsgs');
+}
+
+// ── BROADCAST ─────────────────────────────────────────────────────
+function prevBC(taId, prevId) {
+  const t=document.getElementById(taId).value.trim();
+  document.getElementById(prevId).textContent=t||'Your message will appear here...';
+}
+
+async function sendBC(taId, btnId, btnTxtId, pastListId) {
+  const text=document.getElementById(taId).value.trim();
+  if(!text) return;
+  const btn=document.getElementById(btnId); btn.disabled=true;
+  document.getElementById(btnTxtId).innerHTML='<span class="sp sp-g"></span>Sending…';
+  await dbPostMessage(text);
+  await new Promise(r=>setTimeout(r,700));
+  document.getElementById(taId).value='';
+  prevBC(taId, btnTxtId==='bcBtnTxt'?'bcPrev':'cBcPrev');
+  btn.disabled=false;
+  document.getElementById(btnTxtId).innerHTML='📢 &nbsp;Send to All Members';
+  // Show success note for council page
+  const succEl=document.getElementById('cSendSucc');
+  if(succEl){succEl.style.display='block';setTimeout(()=>succEl.style.display='none',3000);}
+  // Reload past messages list WITHOUT touching the members table
+  await loadPastMsgs(pastListId);
+}
+
+async function loadPastMsgs(elId) {
+  const el=document.getElementById(elId);
+  if(!el) return;
+  const msgs=await dbGetMessages();
+  if(!msgs.length){el.innerHTML='<p style="opacity:.4;font-style:italic;font-size:.88rem">No active messages.</p>';return;}
+  el.innerHTML=msgs.map(m=>{
+    const tl=timeLeft(m.ts)||'Expired';
+    return `<div class="pmsg">
+      <div class="pmsg-b">
+        <div class="pmsg-t">${esc(m.text)}</div>
+        <div class="pmsg-m">Sent ${esc(m.postedAt||'')}</div>
+        <div class="pmsg-e">⏳ ${tl}</div>
+      </div>
+      <button class="pmsg-del" onclick="delMsg('${esc(m._did||'')}','${elId}',this)">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+async function delMsg(did, listId, btn) {
+  if(!confirm('Delete this message?')) return;
+  btn.disabled=true; btn.textContent='…';
+  await dbDeleteMessage(did);
+  await loadPastMsgs(listId);
+}
+
+// ── ADMIN PANEL ───────────────────────────────────────────────────
+function switchAdminTab(tab) {
+  ['members','council','broadcast'].forEach((t,i)=>{
+    document.getElementById('atab-'+t).classList.toggle('act',t===tab);
+    document.getElementById('adminTab-'+t).classList.toggle('act',t===tab);
+  });
+  if(tab==='broadcast') loadPastMsgs('adminPastMsgs');
+}
+
+// Secret snail clicks
+let clicks=0,clickTimer=null;
+function snailClick(){
+  clicks++;clearTimeout(clickTimer);
+  clickTimer=setTimeout(()=>{clicks=0;document.getElementById('clickHint').classList.remove('vis');},4000);
+  const h=document.getElementById('clickHint');
+  if(clicks>=3&&clicks<13){h.textContent=clicks+' / 13 — keep going...';h.classList.add('vis');}
+  if(clicks===13){
+    clicks=0;h.classList.remove('vis');clearTimeout(clickTimer);
+    const s=document.getElementById('bigSnail');
+    s.style.filter='drop-shadow(0 0 40px red)';
+    setTimeout(()=>s.style.filter='',600);
+    setTimeout(openAdminModal,400);
+  }
+}
+
+function openAdminModal(){
+  document.getElementById('adminPwInput').value='';
+  document.getElementById('adminPwErr').classList.remove('vis');
+  document.getElementById('adminModal').classList.add('vis');
+  setTimeout(()=>document.getElementById('adminPwInput').focus(),100);
+}
+function closeAdminModal(){document.getElementById('adminModal').classList.remove('vis');}
+function checkPw(){
+  if(document.getElementById('adminPwInput').value==='JaiGURUJI777'){closeAdminModal();openAdmin();}
+  else{document.getElementById('adminPwErr').classList.add('vis');document.getElementById('adminPwInput').value='';document.getElementById('adminPwInput').focus();}
+}
+
+async function openAdmin() {
+  document.getElementById('adminPanel').classList.add('vis');
+  // Load members and council separately
+  await refreshAdminMembers();
+}
+
+async function refreshAdminMembers() {
+  const members=await dbGetMembers();
+  document.getElementById('adminNote').textContent=fb()?'✅ Live Firebase data — synced across all devices.':'⚠️ Local data only.';
+  const tbody=document.getElementById('adminBody');
+  tbody.innerHTML='';
+  if(!members.length){
+    document.getElementById('adminEmpty').style.display='block';
+    document.getElementById('adminCount').textContent='';
+  } else {
+    document.getElementById('adminEmpty').style.display='none';
+    document.getElementById('adminCount').textContent='📋 Total Members: '+members.length;
     members.forEach((m,i)=>{
+      const isC=!!m.council;
       const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td style="opacity:0.4">${i+1}</td>
-        <td><strong>${escHtml(m.name)}</strong></td>
-        <td>${escHtml(m.email)}</td>
-        <td style="color:var(--moss-bright)">@${escHtml(m.username)}</td>
-        <td>${m.phone?escHtml(m.phone):'<span style="opacity:0.3">—</span>'}</td>
-        <td style="opacity:0.7;font-size:0.85rem">${escHtml(m.joined)}</td>
-        <td>${m.council?'<span class="council-star">⭐</span>Council':'Member'}</td>`;
+      tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${esc(m.name)}</strong></td>
+        <td>${esc(m.email)}</td><td style="color:var(--moss-bright)">@${esc(m.username)}</td>
+        <td>${m.phone?esc(m.phone):'<span style="opacity:.3">—</span>'}</td>
+        <td style="opacity:.7;font-size:.82rem">${esc(m.joined)}</td>
+        <td>${isC?'<span class="cstar">⭐</span>Council':'Member'}</td>
+        <td>${!isC
+          ?`<button class="btn-c" onclick="promoteCouncil(${m.id},this)">⭐ Make Council</button>`
+          :`<button class="btn-r" onclick="demoteCouncil(${m.id},this)">Remove</button>`
+        }</td>`;
       tbody.appendChild(tr);
     });
   }
-
-  // ── BROADCAST PREVIEW ─────────────────────────────────────────────
-  function updateBroadcastPreview() {
-    const t=document.getElementById('broadcastInput').value.trim();
-    document.getElementById('broadcastPreview').textContent=t||'Your message will appear here...';
+  // Council tab
+  const council=members.filter(m=>m.council);
+  const ctbody=document.getElementById('councilBody');
+  ctbody.innerHTML='';
+  document.getElementById('councilCount').textContent='⭐ High Council: '+council.length+' member'+(council.length!==1?'s':'');
+  if(!council.length){document.getElementById('councilEmpty').style.display='block';}
+  else{
+    document.getElementById('councilEmpty').style.display='none';
+    council.forEach((m,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${esc(m.name)}</strong></td>
+        <td style="color:var(--moss-bright)">@${esc(m.username)}</td><td>${esc(m.email)}</td>
+        <td style="opacity:.7;font-size:.82rem">${esc(m.councilJoined||m.joined)}</td>
+        <td><button class="btn-r" onclick="demoteCouncil(${m.id},this)">Remove</button></td>`;
+      ctbody.appendChild(tr);
+    });
   }
-  function updateCouncilPreview() {
-    const t=document.getElementById('councilBroadcastInput').value.trim();
-    document.getElementById('councilBroadcastPreview').textContent=t||'Your message will appear here...';
-  }
+}
 
-  // ── SEND BROADCAST ────────────────────────────────────────────────
-  async function sendBroadcast() {
-    const text=document.getElementById('broadcastInput').value.trim();
-    if(!text) return;
-    const btn=document.getElementById('broadcastBtn'); btn.disabled=true;
-    document.getElementById('broadcastBtnText').innerHTML='<span class="spinner spinner-gold"></span>Sending…';
-    await dbPostMessage(text);
-    await new Promise(r=>setTimeout(r,800));
-    document.getElementById('broadcastInput').value='';
-    document.getElementById('broadcastPreview').textContent='Your message will appear here...';
-    btn.disabled=false;
-    document.getElementById('broadcastBtnText').innerHTML='📢 &nbsp;Send to All Members';
-    await loadPastMessages();
-  }
+async function promoteCouncil(id,btn){btn.disabled=true;btn.textContent='…';await dbSetCouncil(id,true);await refreshAdminMembers();}
+async function demoteCouncil(id,btn){if(!confirm('Remove from High Council?'))return;btn.disabled=true;btn.textContent='…';await dbSetCouncil(id,false);await refreshAdminMembers();}
+function closeAdmin(){document.getElementById('adminPanel').classList.remove('vis');}
 
-  async function sendCouncilBroadcast() {
-    const text=document.getElementById('councilBroadcastInput').value.trim();
-    if(!text) return;
-    const btn=document.getElementById('councilBroadcastBtn'); btn.disabled=true;
-    document.getElementById('councilBroadcastBtnText').innerHTML='<span class="spinner spinner-gold"></span>Sending…';
-    await dbPostMessage(text);
-    await new Promise(r=>setTimeout(r,800));
-    document.getElementById('councilBroadcastInput').value='';
-    document.getElementById('councilBroadcastPreview').textContent='Your message will appear here...';
-    btn.disabled=false;
-    document.getElementById('councilBroadcastBtnText').innerHTML='📢 &nbsp;Send to All Members';
-    // Show success briefly
-    const note=document.createElement('div');
-    note.style.cssText='padding:10px 16px;background:rgba(74,103,65,0.2);border:1px solid var(--moss-bright);border-radius:6px;color:var(--moss-bright);font-size:0.88rem;margin-top:12px;text-align:center';
-    note.textContent='✅ Message sent to all members!';
-    document.getElementById('councilBroadcastBtn').after(note);
-    setTimeout(()=>note.remove(),3000);
-  }
+// ── UTILS ────────────────────────────────────────────────────────
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-  async function loadPastMessages() {
-    const msgs=await dbGetMessages();
-    const el=document.getElementById('pastMessagesList');
-    if(!msgs.length){el.innerHTML='<p style="opacity:0.4;font-style:italic;font-size:0.88rem">No messages sent yet.</p>';return;}
-    el.innerHTML=msgs.map(m=>`
-      <div class="past-msg">
-        <div class="past-msg-body">
-          <div class="past-msg-text">${escHtml(m.text)}</div>
-          <div class="past-msg-meta">Sent ${escHtml(m.postedAt||'')}</div>
-        </div>
-        <button class="past-msg-del" onclick="deleteMessage('${escHtml(m._docId||'')}','${escHtml(m._localId||'')}',this)" title="Delete">🗑</button>
-      </div>
-    `).join('');
-  }
+// ── TRAIL ────────────────────────────────────────────────────────
+const trailC=document.getElementById('trailC');let lt=0;
+document.addEventListener('mousemove',e=>{
+  const n=Date.now();if(n-lt<60)return;lt=n;
+  const d=document.createElement('div');d.className='trail-dot';
+  d.style.left=e.clientX-3+'px';d.style.top=e.clientY-3+'px';
+  trailC.appendChild(d);setTimeout(()=>d.remove(),2000);
+});
 
-  async function deleteMessage(docId, localId, btn) {
-    if(!confirm('Delete this message? Members will no longer see it.')) return;
-    btn.disabled=true; btn.textContent='…';
-    if(docId) await dbDeleteMessage(docId);
-    await loadPastMessages();
-  }
+// ── AMBIENT SNAILS ───────────────────────────────────────────────
+function amb(){const s=document.createElement('div');s.className='amb';s.textContent='🐌';const d=8+Math.random()*12;s.style.left=Math.random()*window.innerWidth+'px';s.style.top=Math.random()*window.innerHeight+'px';s.style.setProperty('--tx',(Math.random()-.5)*300+'px');s.style.setProperty('--ty',(Math.random()-.5)*200+'px');s.style.animationDuration=d+'s';document.body.appendChild(s);setTimeout(()=>s.remove(),d*1000);}
+setInterval(amb,4000);amb();
 
-  // ── ADMIN PANEL ───────────────────────────────────────────────────
-  function switchAdminTab(tab) {
-    document.querySelectorAll('.admin-tab').forEach((b,i)=>b.classList.toggle('active',['members','council','broadcast'][i]===tab));
-    document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
-    document.getElementById('adminTab-'+tab).classList.add('active');
-    if(tab==='broadcast') loadPastMessages();
-  }
+function confetti(){for(let i=0;i<10;i++){setTimeout(()=>{const s=document.createElement('div');s.className='amb';s.textContent='🐌';s.style.fontSize='2.5rem';s.style.left=Math.random()*window.innerWidth+'px';s.style.top=Math.random()*window.innerHeight+'px';s.style.setProperty('--tx',(Math.random()-.5)*400+'px');s.style.setProperty('--ty',(Math.random()-.5)*400+'px');s.style.animationDuration='3s';document.body.appendChild(s);setTimeout(()=>s.remove(),3000);},i*150);}}
 
-  // Secret snail click
-  let snailClicks=0,clickTimer=null;
-  function snailClick() {
-    snailClicks++;
-    clearTimeout(clickTimer);
-    clickTimer=setTimeout(()=>{snailClicks=0;document.getElementById('snailHint').classList.remove('visible');},4000);
-    const hint=document.getElementById('snailHint');
-    if(snailClicks>=3&&snailClicks<13){hint.textContent=snailClicks+' / 13 — keep going...';hint.classList.add('visible');}
-    if(snailClicks===13){
-      snailClicks=0;hint.classList.remove('visible');clearTimeout(clickTimer);
-      const s=document.getElementById('bigSnail');
-      s.style.filter='drop-shadow(0 0 40px red)';
-      setTimeout(()=>s.style.filter='',600);
-      setTimeout(openAdminModal,400);
-    }
-  }
+// ── SCROLL REVEAL ────────────────────────────────────────────────
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('iv');});},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
-  function openAdminModal(){document.getElementById('adminPasswordInput').value='';document.getElementById('adminPassErr').classList.remove('visible');document.getElementById('adminModal').classList.add('visible');setTimeout(()=>document.getElementById('adminPasswordInput').focus(),100);}
-  function closeAdminModal(){document.getElementById('adminModal').classList.remove('visible');}
-  function checkAdminPassword(){
-    if(document.getElementById('adminPasswordInput').value==='JaiGURUJI777'){closeAdminModal();openAdminPanel();}
-    else{document.getElementById('adminPassErr').classList.add('visible');document.getElementById('adminPasswordInput').value='';document.getElementById('adminPasswordInput').focus();}
-  }
+// ── MODAL CLOSE ON OVERLAY ───────────────────────────────────────
+document.getElementById('adminModal').addEventListener('click',function(e){if(e.target===this)closeAdminModal();});
 
-  async function openAdminPanel() {
-    const members=await dbGetAllMembers();
-    const tbody=document.getElementById('adminTableBody');
-    tbody.innerHTML='';
-    document.getElementById('adminNote').textContent=fb()?'✅ Live Firebase data — synced across all devices.':'⚠️ Local data only — Firebase not active.';
-    if(!members.length){document.getElementById('adminEmpty').style.display='block';document.getElementById('adminTable').style.display='none';document.getElementById('adminCount').textContent='';}
-    else{
-      document.getElementById('adminEmpty').style.display='none';
-      document.getElementById('adminTable').style.display='table';
-      document.getElementById('adminCount').textContent='📋 Total Members: '+members.length;
-      members.forEach((m,i)=>{
-        const isCouncil=!!m.council;
-        const tr=document.createElement('tr');
-        tr.innerHTML=`
-          <td style="opacity:0.4">${i+1}</td>
-          <td><strong>${escHtml(m.name)}</strong></td>
-          <td>${escHtml(m.email)}</td>
-          <td style="color:var(--moss-bright)">@${escHtml(m.username)}</td>
-          <td>${m.phone?escHtml(m.phone):'<span style="opacity:0.3">—</span>'}</td>
-          <td style="opacity:0.7;font-size:0.82rem">${escHtml(m.joined)}</td>
-          <td>${isCouncil?'<span class="council-star">⭐</span>Council':'Member'}</td>
-          <td>
-            ${!isCouncil
-              ? `<button class="btn-council" onclick="promoteToCouncil(${m.id},this)">⭐ Make Council</button>`
-              : `<button class="btn-remove" onclick="removeFromCouncil(${m.id},this)">Remove</button>`
-            }
-          </td>`;
-        tbody.appendChild(tr);
-      });
-    }
-
-    // Council tab
-    const councilMembers=members.filter(m=>m.council);
-    const ctbody=document.getElementById('councilTableBody');
-    ctbody.innerHTML='';
-    document.getElementById('councilCount').textContent='⭐ High Council Members: '+councilMembers.length;
-    if(!councilMembers.length){document.getElementById('councilEmpty').style.display='block';document.getElementById('councilTable').style.display='none';}
-    else{
-      document.getElementById('councilEmpty').style.display='none';
-      document.getElementById('councilTable').style.display='table';
-      councilMembers.forEach((m,i)=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`
-          <td style="opacity:0.4">${i+1}</td>
-          <td><strong>${escHtml(m.name)}</strong></td>
-          <td style="color:var(--moss-bright)">@${escHtml(m.username)}</td>
-          <td>${escHtml(m.email)}</td>
-          <td style="opacity:0.7;font-size:0.82rem">${escHtml(m.councilJoined||m.joined)}</td>
-          <td><button class="btn-remove" onclick="removeFromCouncil(${m.id},this)">Remove</button></td>`;
-        ctbody.appendChild(tr);
-      });
-    }
-
-    document.getElementById('adminPanel').classList.add('visible');
-  }
-
-  async function promoteToCouncil(memberId, btn) {
-    btn.disabled=true; btn.textContent='…';
-    await dbSetCouncil(memberId, true);
-    await openAdminPanel();
-  }
-
-  async function removeFromCouncil(memberId, btn) {
-    if(!confirm('Remove this member from the High Council?')) return;
-    btn.disabled=true; btn.textContent='…';
-    await dbSetCouncil(memberId, false);
-    await openAdminPanel();
-  }
-
-  function closeAdmin(){document.getElementById('adminPanel').classList.remove('visible');}
-
-  // ── UTILS ─────────────────────────────────────────────────────────
-  function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
-  // ── MOUSE TRAIL ───────────────────────────────────────────────────
-  const trailContainer=document.getElementById('trailContainer');
-  let lastTrail=0;
-  document.addEventListener('mousemove',e=>{
-    const now=Date.now();if(now-lastTrail<60)return;lastTrail=now;
-    const dot=document.createElement('div');dot.className='trail-dot';
-    dot.style.left=e.clientX-3+'px';dot.style.top=e.clientY-3+'px';
-    trailContainer.appendChild(dot);setTimeout(()=>dot.remove(),2000);
-  });
-
-  // ── AMBIENT SNAILS ────────────────────────────────────────────────
-  function launchAmbientSnail(){const s=document.createElement('div');s.className='ambient-snail';s.textContent='🐌';const dur=8+Math.random()*12;s.style.left=Math.random()*window.innerWidth+'px';s.style.top=Math.random()*window.innerHeight+'px';s.style.setProperty('--tx',(Math.random()-0.5)*300+'px');s.style.setProperty('--ty',(Math.random()-0.5)*200+'px');s.style.animationDuration=dur+'s';document.body.appendChild(s);setTimeout(()=>s.remove(),dur*1000);}
-  setInterval(launchAmbientSnail,4000);launchAmbientSnail();
-
-  function launchConfettiSnails(){for(let i=0;i<10;i++){setTimeout(()=>{const s=document.createElement('div');s.className='ambient-snail';s.textContent='🐌';s.style.fontSize='2.5rem';s.style.left=Math.random()*window.innerWidth+'px';s.style.top=Math.random()*window.innerHeight+'px';s.style.setProperty('--tx',(Math.random()-0.5)*400+'px');s.style.setProperty('--ty',(Math.random()-0.5)*400+'px');s.style.animationDuration='3s';document.body.appendChild(s);setTimeout(()=>s.remove(),3000);},i*150);}}
-
-  // ── SCROLL REVEAL ─────────────────────────────────────────────────
-  const observer=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in-view');});},{threshold:0.15});
-  document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
-
-  // ── MODAL CLOSE ON OVERLAY CLICK ─────────────────────────────────
-  document.getElementById('adminModal').addEventListener('click',function(e){if(e.target===this)closeAdminModal();});
-
-  // ── INIT ──────────────────────────────────────────────────────────
-  const existingUser=getCurrentUser();
-  if(existingUser){
-    document.getElementById('authNavLink').textContent='👤 '+existingUser.username;
-    document.getElementById('authNavLink').classList.add('signed-in-nav');
-    document.getElementById('membersNavLink').style.display='inline-block';
-    if(existingUser.council){document.getElementById('councilNavLink').style.display='inline-block';document.getElementById('councilNavLink').classList.add('council-nav');}
-    showGreeting(existingUser);
-    setTimeout(async()=>{const msgs=await dbGetMessages();if(msgs.length)showCouncilMessage();},1000);
-  }
+// ── INIT ─────────────────────────────────────────────────────────
+const cu=getCurrentUser();
+if(cu){
+  document.getElementById('authNavLink').textContent='👤 '+cu.username;
+  document.getElementById('authNavLink').classList.add('s-nav');
+  document.getElementById('mNavLink').style.display='inline-block';
+  if(cu.council){document.getElementById('cNavLink').style.display='inline-block';document.getElementById('cNavLink').classList.add('c-nav');}
+  showGreeting(cu);
+  setTimeout(async()=>{const msgs=await dbGetMessages();if(msgs.length)maybeShowMsgBanner();},1000);
+}
 </script>
 </body>
 </html>
