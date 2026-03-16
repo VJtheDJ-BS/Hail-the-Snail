@@ -251,6 +251,22 @@
     <button class="b-dismiss" onclick="App.dismissBanner('msgBanner')">✕</button>
   </div>
 </div>
+
+<!-- USERNAME CHANGE NOTIFICATION BANNER -->
+<div id="notifBanner" class="banner" style="background:linear-gradient(135deg,rgba(220,50,50,.15),rgba(201,147,58,.1));border-bottom:1px solid rgba(220,50,50,.3)">
+  <div class="b-inner">
+    <span class="msg-icon">⚠️</span>
+    <div style="flex:1">
+      <div class="msg-lbl" style="color:var(--red)">ACTION REQUIRED — USERNAME CHANGE</div>
+      <div class="msg-txt" id="notifTxt"></div>
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="notifNewUname" placeholder="Choose your new username..." style="max-width:260px;padding:8px 12px;font-size:.9rem;background:rgba(255,255,255,.06);border:1px solid rgba(220,50,50,.4);border-radius:6px;color:var(--cream)"/>
+        <button onclick="App.submitNewUsername()" style="padding:8px 18px;background:rgba(201,147,58,.8);border:none;border-radius:6px;color:#1a0e04;font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.1em;cursor:pointer">✓ Save Username</button>
+      </div>
+      <div id="notifErr" style="color:#e74c3c;font-size:.8rem;margin-top:6px;font-style:italic;display:none"></div>
+    </div>
+  </div>
+</div>
 <div class="modal" id="adminModal">
   <div class="mbox">
     <button class="mclose" onclick="App.closeAdminModal()">✕</button>
@@ -489,6 +505,8 @@ const App = {
       if(fbUser){
         try{const snap=await getDoc(doc(this._db,'members',fbUser.uid));if(snap.exists())this._profile=snap.data();else this._profile=null;}catch(e){console.warn(e);}
         this.updateNav();this.showGreeting();
+        // Check if this user has a pending username change request
+        if(this._profile&&this._profile.mustChangeUsername) this.showUsernameChangeNotif();
         setTimeout(async()=>{const msgs=await this.dbGetMessages();if(msgs.length)this.maybeShowMsgBanner();},1000);
       }else{this._profile=null;this.updateNav();}
     });
@@ -511,6 +529,16 @@ const App = {
   async dbDeleteMember(uid){
     const {deleteDoc,doc}=this._fbFns;
     try{await deleteDoc(doc(this._db,'members',uid));}catch(e){console.warn(e);}
+  },
+
+  async dbSetUsernameChangeRequest(uid, requestedBy){
+    const {updateDoc,doc}=this._fbFns;
+    try{await updateDoc(doc(this._db,'members',uid),{mustChangeUsername:true,usernameChangeRequestedBy:requestedBy,usernameChangeRequestedAt:new Date().toLocaleString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})});}catch(e){console.warn(e);}
+  },
+
+  async dbUpdateUsername(uid, newUsername){
+    const {updateDoc,doc}=this._fbFns;
+    try{await updateDoc(doc(this._db,'members',uid),{username:newUsername,ul:newUsername.toLowerCase(),mustChangeUsername:false,usernameChangeRequestedBy:'',usernameChangeRequestedAt:''});}catch(e){console.warn(e);}
   },
 
   // ── NAV ───────────────────────────────────────────────────────
@@ -541,6 +569,29 @@ const App = {
   showGreeting(){if(!this._profile)return;document.getElementById('bHello').textContent=this.timeGreet()+',';const cb=this._profile.council?'<span class="cbadge">⭐ HIGH COUNCIL</span>':'';document.getElementById('bUser').innerHTML='<em>'+this.esc(this._profile.username)+'</em> — welcome back'+cb;document.getElementById('bDaily').textContent=this.dailyMsg();const b=document.getElementById('greetingBanner');b.style.cssText='';b.classList.add('visible');},
   async maybeShowMsgBanner(){const msgs=await this.dbGetMessages();if(!msgs.length)return;const m=msgs[0];document.getElementById('msgBannerTxt').textContent=m.text;document.getElementById('msgBannerDt').textContent='Posted '+m.postedAt;document.getElementById('msgBannerExp').textContent=this.timeLeft(m.ts)||'';const b=document.getElementById('msgBanner');b.style.cssText='';b.classList.add('visible');},
   dismissBanner(id){const b=document.getElementById(id);b.style.transition='all .4s ease';b.style.maxHeight=b.offsetHeight+'px';requestAnimationFrame(()=>{b.style.maxHeight='0';b.style.opacity='0';});setTimeout(()=>b.style.display='none',400);},
+
+  showUsernameChangeNotif(){
+    const by=this._profile.usernameChangeRequestedBy||'The High Council';
+    document.getElementById('notifTxt').innerHTML=`<strong>${this.esc(by)}</strong> has requested you change your username <strong>@${this.esc(this._profile.username)}</strong>. Please choose a new one below.`;
+    const b=document.getElementById('notifBanner');b.style.cssText='';b.classList.add('visible');
+  },
+
+  async submitNewUsername(){
+    const newUname=document.getElementById('notifNewUname').value.trim();
+    const errEl=document.getElementById('notifErr');
+    if(!newUname||!/^[a-zA-Z0-9_]{3,20}$/.test(newUname)){errEl.textContent='3–20 characters, letters/numbers/_ only.';errEl.style.display='block';return;}
+    errEl.style.display='none';
+    const uid=this._auth.currentUser.uid;
+    await this.dbUpdateUsername(uid,newUname);
+    // Update local profile
+    this._profile.username=newUname;this._profile.mustChangeUsername=false;
+    this.updateNav();
+    // Dismiss notification
+    this.dismissBanner('notifBanner');
+    document.getElementById('notifNewUname').value='';
+    // Show confirmation in greeting
+    document.getElementById('bUser').innerHTML='<em>'+this.esc(newUname)+'</em> — username updated! ✅';
+  },
 
   // ── AUTH UI ───────────────────────────────────────────────────
   refreshAuthUI(){
@@ -607,7 +658,7 @@ const App = {
       const errEl=document.getElementById('siLoginErr');errEl.textContent=msg;errEl.classList.add('vis');
     }
   },
-  async doSignOut(){const {signOut}=this._fbFns;await signOut(this._auth);['greetingBanner','msgBanner'].forEach(id=>{const b=document.getElementById(id);b.style.display='none';b.classList.remove('visible');});this.showPage('home');},
+  async doSignOut(){const {signOut}=this._fbFns;await signOut(this._auth);['greetingBanner','msgBanner','notifBanner'].forEach(id=>{const b=document.getElementById(id);b.style.display='none';b.classList.remove('visible');});this.showPage('home');},
 
   // ── MEMBERS PAGE ──────────────────────────────────────────────
   async loadMembersPage(){const feed=document.getElementById('msgFeed');feed.innerHTML='<div class="nomsg"><span>⏳</span>Loading…</div>';const msgs=await this.dbGetMessages();if(!msgs.length){feed.innerHTML='<div class="nomsg"><span>📜</span>No messages yet from the High Council.</div>';return;}feed.innerHTML=msgs.map(m=>`<div class="mcard"><div class="mcard-hdr"><span class="mcard-crown">⭐</span><span class="mcard-from">HIGH COUNCIL</span><span class="mcard-date">${this.esc(m.postedAt||'')}</span></div><div class="mcard-txt">${this.esc(m.text)}</div><div class="mcard-expires">⏳ ${this.timeLeft(m.ts)||'Expired'}</div></div>`).join('');},
@@ -619,11 +670,24 @@ const App = {
     document.getElementById('cMembersEmpty').style.display=members.length?'none':'block';
     members.forEach((m,i)=>{
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td>${this.esc(m.email)}</td><td style="color:var(--moss-bright)">@${this.esc(m.username)}</td><td>${m.phone?this.esc(m.phone):'<span style="opacity:.3">—</span>'}</td><td style="opacity:.7;font-size:.85rem">${this.esc(m.joined)}</td><td>${m.council?'<span class="cstar">⭐</span>Council':'Member'}</td><td><button class="btn-r" onclick="App.deleteMember('${m._did}','${this.esc(m.username)}',this)">🗑 Delete</button></td>`;
+      const councilName=this._profile?this._profile.username:'High Council';
+      tr.innerHTML=`<td style="opacity:.4">${i+1}</td><td><strong>${this.esc(m.name)}</strong></td><td>${this.esc(m.email)}</td><td style="color:var(--moss-bright)">@${this.esc(m.username)}${m.mustChangeUsername?'&nbsp;<span style="color:var(--red);font-size:.7rem">(change pending)</span>':''}</td><td>${m.phone?this.esc(m.phone):'<span style="opacity:.3">—</span>'}</td><td style="opacity:.7;font-size:.85rem">${this.esc(m.joined)}</td><td>${m.council?'<span class="cstar">⭐</span>Council':'Member'}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-c" style="font-size:.52rem;padding:5px 10px" onclick="App.requestUsernameChange('${m._did}','${this.esc(m.username)}','${this.esc(councilName)}',this)">✏️ Username</button>
+        <button class="btn-r" onclick="App.deleteMember('${m._did}','${this.esc(m.username)}',this)">🗑 Delete</button>
+      </td>`;
       tbody.appendChild(tr);
     });
     await this.loadPastMsgs('cPastMsgs');
     await this.loadPostsPanel('cPostsList');
+  },
+
+  async requestUsernameChange(uid, currentUsername, requestedBy, btn){
+    if(!confirm(`Request @${currentUsername} to change their username?`))return;
+    btn.disabled=true;btn.textContent='…';
+    await this.dbSetUsernameChangeRequest(uid, requestedBy);
+    btn.disabled=false;btn.textContent='✅ Requested';
+    btn.style.opacity='.5';btn.disabled=true;
   },
 
   async deleteMember(uid, username, btn){
